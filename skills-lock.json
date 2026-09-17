@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "obsidian-notes-creator": {
+      "source": "szeyu/vibe-study-skills",
+      "sourceType": "github",
+      "skillPath": "skills/obsidian-notes-creator/SKILL.md",
+      "computedHash": "df368e24ebf490a4a99100d93303e2ca52038e38a0856d9b7ebafea0cf1c350b"
+    },
+    "study-plan": {
+      "source": "anthropics/claude-for-legal",
+      "sourceType": "github",
+      "skillPath": "law-student/skills/study-plan/SKILL.md",
+      "computedHash": "e8d0225da00e5d0fe841ccb637af6b988ef143b6ad228bc6690765049aae2caf"
+    }
+  }
+}

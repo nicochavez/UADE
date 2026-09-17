@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reconstrucción de Funciones · UADE</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- MathJax 3 -->
+<script>
+MathJax = {
+  tex: { inlineMath:[['$','$'],['\\(','\\)']], displayMath:[['$$','$$'],['\\[','\\]']], tags:'none' },
+  options: { skipHtmlTags:['script','noscript','style','textarea','pre'] },
+  startup: { typeset: false }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<style>
+:root{
+  --bg:#0a0c10;--surface:#111318;--surface2:#181b22;--border:#252932;
+  --accent:#4fc3f7;--accent2:#81d4fa;--gold:#ffd54f;--green:#69f0ae;
+  --red:#ff5252;--orange:#ffab40;--purple:#ce93d8;--teal:#4db6ac;
+  --text:#e8eaf0;--text2:#8b92a5;--text3:#4a5166;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(79,195,247,.03)1px,transparent 1px),linear-gradient(90deg,rgba(79,195,247,.03)1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.container{position:relative;z-index:1;max-width:1340px;margin:0 auto;padding:0 20px 80px;}
+
+header{padding:22px 0 18px;border-bottom:1px solid var(--border);margin-bottom:22px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.header-left{display:flex;flex-direction:column;gap:4px;}
+.badge{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--accent);text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+.badge::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
+h1{font-size:21px;font-weight:600;letter-spacing:-.02em;}
+h1 span{color:var(--accent);}
+.subtitle{font-size:11px;color:var(--text3);font-family:var(--mono);letter-spacing:.06em;}
+
+.toolbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.toolbar-btn{font-family:var(--mono);font-size:10px;letter-spacing:.08em;padding:7px 14px;border-radius:6px;border:1px solid var(--border);cursor:pointer;background:var(--surface);color:var(--text2);transition:all .15s;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
+.toolbar-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+.method-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px;width:fit-content;flex-wrap:wrap;}
+.method-tab{font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:6px 14px;border-radius:5px;border:none;cursor:pointer;background:transparent;color:var(--text2);transition:all .2s;text-transform:uppercase;}
+.method-tab:hover{color:var(--text);}
+.method-tab.active{background:var(--accent);color:#000;font-weight:600;}
+
+.main-grid{display:grid;grid-template-columns:340px 1fr;gap:18px;align-items:start;}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr;}}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.panel-header{padding:10px 16px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--text2);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;}
+.panel-body{padding:14px;}
+
+.fn-input-wrap{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
+.fn-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--accent);font-family:var(--mono);font-size:12px;padding:7px 10px;outline:none;transition:border-color .15s;}
+.fn-input:focus{border-color:var(--accent);}
+.fn-input::placeholder{color:var(--text3);}
+.range-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;}
+.range-row input,.range-row select{background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 8px;outline:none;width:100%;}
+.range-row input:focus{border-color:var(--gold);}
+.range-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;}
+.fn-hint{font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:8px;line-height:1.6;}
+.fn-error{color:var(--red);font-family:var(--mono);font-size:10px;margin-top:4px;display:none;}
+.fn-error.visible{display:block;}
+.node-btns{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
+.node-btn{font-family:var(--mono);font-size:9px;padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;text-transform:uppercase;transition:all .12s;}
+.node-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+.points-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;margin-bottom:10px;}
+.points-table th{color:var(--text3);font-size:9px;letter-spacing:.1em;padding:4px 6px;text-align:left;border-bottom:1px solid var(--border);}
+.points-table td{padding:3px 3px;}
+.points-table input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 6px;outline:none;transition:border-color .15s;}
+.points-table input:focus{border-color:var(--accent);}
+
+.btn{font-family:var(--mono);font-size:10px;letter-spacing:.08em;padding:6px 12px;border-radius:5px;border:1px solid var(--border);cursor:pointer;transition:all .15s;text-transform:uppercase;}
+.btn-ghost{background:transparent;color:var(--text2);}
+.btn-ghost:hover{border-color:var(--text2);color:var(--text);}
+.btn-accent{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600;}
+.btn-accent:hover{background:var(--accent2);}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+
+.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.preset-btn{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:7px 9px;cursor:pointer;transition:all .15s;text-align:left;}
+.preset-btn:hover{border-color:var(--accent);}
+.preset-btn .preset-name{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;}
+.preset-btn .preset-desc{font-size:9px;color:var(--text3);margin-top:1px;}
+
+.eval-row{display:flex;gap:6px;align-items:center;margin-bottom:10px;}
+.eval-row label{font-family:var(--mono);font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;}
+.eval-row input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 8px;outline:none;}
+.eval-row input:focus{border-color:var(--accent);}
+
+/* EVAL RESULT — LaTeX */
+.eval-result{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:10px 14px;display:none;margin-bottom:10px;overflow-x:auto;}
+.eval-result.visible{display:block;}
+.eval-result .MJX-TEX,.eval-result mjx-container{color:var(--gold)!important;}
+
+.canvas-wrap{position:relative;background:var(--surface2);border-radius:0 0 10px 10px;}
+canvas{display:block;width:100%;cursor:crosshair;}
+.canvas-legend{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:4px;background:rgba(10,12,16,.88);border:1px solid var(--border);border-radius:6px;padding:7px 11px;font-family:var(--mono);font-size:9px;}
+.legend-item{display:flex;align-items:center;gap:6px;color:var(--text2);}
+.legend-dot{width:10px;height:3px;border-radius:2px;}
+.legend-dot.circle{width:7px;height:7px;border-radius:50%;background:var(--gold)!important;}
+.tooltip{position:absolute;background:rgba(10,12,16,.93);border:1px solid var(--accent);border-radius:4px;padding:5px 9px;font-family:var(--mono);font-size:10px;color:var(--accent);pointer-events:none;display:none;z-index:10;white-space:nowrap;}
+
+.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+@media(max-width:700px){.info-grid{grid-template-columns:repeat(2,1fr);}}
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 12px;}
+.info-card .label{font-family:var(--mono);font-size:8px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:3px;}
+.info-card .value{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);}
+
+/* ── POLYNOMIAL LATEX BOX ── */
+.poly-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:12px;display:none;overflow-x:auto;}
+.poly-box.visible{display:block;}
+.poly-box mjx-container{color:var(--green)!important;font-size:105%!important;}
+.poly-box-title{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:8px;}
+
+/* COEFFICIENTS TABLE */
+.coeff-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:10px;margin-top:10px;display:none;}
+.coeff-table.visible{display:table;}
+.coeff-table th{background:var(--surface);color:var(--text3);font-size:9px;letter-spacing:.08em;padding:5px 8px;border-bottom:1px solid var(--border);text-align:right;}
+.coeff-table td{padding:5px 8px;border-bottom:1px solid rgba(37,41,50,.4);text-align:right;color:var(--text2);}
+.coeff-table td.frac{color:var(--gold);}
+.coeff-table td mjx-container{color:var(--gold)!important;}
+
+.diff-table-wrap{overflow-x:auto;margin-bottom:10px;display:none;}
+.diff-table-wrap.visible{display:block;}
+.diff-table{border-collapse:collapse;font-family:var(--mono);font-size:9px;min-width:100%;}
+.diff-table th,.diff-table td{border:1px solid var(--border);padding:4px 8px;text-align:right;white-space:nowrap;}
+.diff-table th{color:var(--text3);background:var(--surface);}
+.diff-table td{color:var(--text2);}
+.diff-table td.highlight{color:var(--orange);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:880px;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;}
+.modal-header{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:2;}
+.modal-title{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--text);text-transform:uppercase;}
+.modal-close{background:transparent;border:none;color:var(--text2);font-size:18px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:4px;}
+.modal-close:hover{color:var(--red);}
+.modal-body{padding:20px;flex:1;}
+.modal-tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid var(--border);}
+.modal-tab{font-family:var(--mono);font-size:10px;letter-spacing:.08em;padding:7px 14px;border:none;background:transparent;color:var(--text2);cursor:pointer;text-transform:uppercase;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.modal-tab:hover{color:var(--text);}
+.modal-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.modal-section{display:none;}
+.modal-section.active{display:block;}
+
+/* FORMULA BLOCKS with LaTeX */
+.formula-block{background:var(--surface2);border:1px solid rgba(79,195,247,.18);border-radius:7px;padding:12px 16px;margin:8px 0;overflow-x:auto;}
+.formula-block mjx-container{color:var(--green)!important;}
+.formula-block.gold mjx-container{color:var(--gold)!important;}
+.formula-block.orange mjx-container{color:var(--orange)!important;}
+.formula-note{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:5px;}
+.formula-title{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--accent);text-transform:uppercase;margin-bottom:6px;}
+
+.error-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+@media(max-width:600px){.error-grid{grid-template-columns:1fr;}}
+.error-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;}
+.error-card h3{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--orange);text-transform:uppercase;margin-bottom:8px;}
+.error-card p{font-size:12px;color:var(--text2);line-height:1.7;}
+.error-card .note{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:6px;}
+
+.error-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;margin-bottom:14px;}
+.error-table th{background:var(--surface);color:var(--text3);font-size:9px;letter-spacing:.1em;padding:6px 10px;text-align:left;border-bottom:1px solid var(--border);}
+.error-table td{padding:6px 10px;border-bottom:1px solid rgba(37,41,50,.5);color:var(--text2);}
+.error-table td.val{color:var(--gold);font-weight:600;}
+.error-table td.bound{color:var(--orange);}
+
+.live-err-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:10px;}
+.live-err-table th{background:var(--surface);color:var(--text3);font-size:8px;letter-spacing:.1em;padding:5px 8px;border-bottom:1px solid var(--border);}
+.live-err-table td{padding:5px 8px;border-bottom:1px solid rgba(37,41,50,.4);color:var(--text2);}
+.live-err-table .good{color:var(--green);}
+.live-err-table .bad{color:var(--red);}
+.live-err-table .medium{color:var(--orange);}
+
+.nn-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+@media(max-width:600px){.nn-grid{grid-template-columns:1fr;}}
+.nn-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+.nn-card .nn-icon{font-size:20px;margin-bottom:6px;}
+.nn-card h4{font-family:var(--mono);font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;}
+.nn-card p{font-size:11px;color:var(--text2);line-height:1.65;}
+
+.nn-demo-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px;}
+.nn-demo-wrap h4{font-family:var(--mono);font-size:10px;color:var(--purple);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+.nn-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
+.nn-controls label{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;}
+.nn-controls input[type=range]{accent-color:var(--purple);width:90px;}
+.nn-controls select{background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:10px;padding:4px 8px;outline:none;}
+.nn-stat{font-family:var(--mono);font-size:10px;color:var(--purple);}
+
+.app-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+@media(max-width:600px){.app-grid{grid-template-columns:1fr;}}
+.app-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:13px 15px;border-left:3px solid var(--teal);}
+.app-card h4{font-size:12px;font-weight:600;color:var(--teal);margin-bottom:5px;}
+.app-card p{font-size:11px;color:var(--text2);line-height:1.65;}
+.app-card .tag{display:inline-block;font-family:var(--mono);font-size:8px;letter-spacing:.08em;padding:2px 6px;border-radius:3px;background:rgba(77,182,172,.15);color:var(--teal);text-transform:uppercase;margin-right:4px;margin-top:5px;}
+
+.section-label{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--text3);text-transform:uppercase;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+select{background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 8px;outline:none;cursor:pointer;}
+select:focus{border-color:var(--accent);}
+.check-row{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.check-row input[type=checkbox]{accent-color:var(--accent);}
+.check-row label{font-family:var(--mono);font-size:10px;color:var(--text2);cursor:pointer;text-transform:uppercase;letter-spacing:.08em;}
+.error-msg{color:var(--red);font-family:var(--mono);font-size:10px;margin-top:5px;display:none;}
+.error-msg.visible{display:block;}
+.divider{height:1px;background:var(--border);margin:12px 0;}
+.deriv-row{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
+.deriv-row label{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;}
+.deriv-row input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--gold);font-family:var(--mono);font-size:11px;padding:5px 8px;outline:none;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--surface);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.nn-section p{font-size:12px;color:var(--text2);line-height:1.75;margin-bottom:12px;}
+.nn-section h2{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="header-left">
+    <div class="badge">Simulador Activo</div>
+    <h1>Reconstrucción de <span>Funciones Discretas</span></h1>
+    <div class="subtitle">Ing. Omar Cáceres · Modelado y Simulación · UADE</div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="toolbar-btn" onclick="openModal('fngen')"><span>𝑓</span> Función + Nodos</button>
+  <button class="toolbar-btn" onclick="openModal('error')"><span>⚠</span> Análisis de Error</button>
+  <button class="toolbar-btn" onclick="openModal('apps')"><span>◈</span> Aplicaciones</button>
+  <button class="toolbar-btn" onclick="openModal('nn')"><span>⬡</span> Redes Neuronales</button>
+</div>
+
+<div class="method-tabs">
+  <button class="method-tab active" data-method="lagrange">Lagrange</button>
+  <button class="method-tab" data-method="newton_forward">Newton ↑</button>
+  <button class="method-tab" data-method="newton_backward">Newton ↓</button>
+  <button class="method-tab" data-method="divided">Div. Divididas</button>
+  <button class="method-tab" data-method="linear">Lineal</button>
+  <button class="method-tab" data-method="spline">Spline Cúbico</button>
+</div>
+
+<div class="main-grid">
+<div style="display:flex;flex-direction:column;gap:14px;">
+  <div class="panel">
+    <div class="panel-header"><span>Funciones Ejemplo</span></div>
+    <div class="panel-body"><div class="preset-grid" id="presetGrid"></div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header">
+      <span>Puntos (xᵢ, yᵢ)</span>
+      <select id="numPoints"></select>
+    </div>
+    <div class="panel-body">
+      <table class="points-table">
+        <thead><tr><th>#</th><th>xᵢ</th><th>f(xᵢ)</th></tr></thead>
+        <tbody id="pointsBody"></tbody>
+      </table>
+      <div class="error-msg" id="errorMsg">⚠ Los nodos xᵢ deben ser distintos</div>
+      <div class="btn-row">
+        <button class="btn btn-accent" onclick="computeAll()">▶ Calcular</button>
+        <button class="btn btn-ghost" onclick="clearPoints()">Limpiar</button>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><span>Evaluar P(x)</span></div>
+    <div class="panel-body">
+      <div class="eval-row">
+        <label>x =</label>
+        <input type="number" id="evalX" step="0.01" placeholder="valor">
+        <button class="btn btn-accent" onclick="evaluateAt()">Eval</button>
+      </div>
+      <div class="eval-result" id="evalResult"></div>
+      <div class="check-row">
+        <input type="checkbox" id="showBasis" onchange="computeAll()">
+        <label for="showBasis">Mostrar Lᵢ(x) (Lagrange)</label>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="showTrueFunc" onchange="computeAll()">
+        <label for="showTrueFunc">Mostrar f(x) real</label>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="showErrorCurve" onchange="computeAll()">
+        <label for="showErrorCurve">Mostrar |f(x)−P(x)|</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px;">
+  <div class="info-grid">
+    <div class="info-card"><div class="label">Método</div><div class="value" id="statMethod">Lagrange</div></div>
+    <div class="info-card"><div class="label">Grado</div><div class="value" id="statDegree">—</div></div>
+    <div class="info-card"><div class="label">Nodos</div><div class="value" id="statNodes">—</div></div>
+    <div class="info-card"><div class="label">Error Máx</div><div class="value" id="statError">—</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><span>Visualización</span></div>
+    <div class="canvas-wrap">
+      <canvas id="mainCanvas" height="400"></canvas>
+      <div class="canvas-legend">
+        <div class="legend-item"><div class="legend-dot circle"></div> Datos</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> P(x)</div>
+        <div class="legend-item" id="legendTrue" style="display:none"><div class="legend-dot" style="background:var(--green)"></div> f(x) real</div>
+        <div class="legend-item" id="legendErr" style="display:none"><div class="legend-dot" style="background:var(--red)"></div> |Error|</div>
+        <div class="legend-item" id="legendBasis" style="display:none"><div class="legend-dot" style="background:var(--purple);opacity:.7"></div> Lᵢ(x)</div>
+      </div>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+  </div>
+  <!-- POLYNOMIAL DISPLAY -->
+  <div class="panel">
+    <div class="panel-header">
+      <span>Polinomio Interpolante</span>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost" id="btnShowExpanded" onclick="togglePolyView('expanded')" style="font-size:9px;padding:3px 8px">Expandido</button>
+        <button class="btn btn-ghost" id="btnShowLagrange" onclick="togglePolyView('lagrange')" style="font-size:9px;padding:3px 8px">Forma Lagrange</button>
+        <button class="btn btn-ghost" id="btnShowCoeffs" onclick="togglePolyView('coeffs')" style="font-size:9px;padding:3px 8px">Coeficientes</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="poly-box" id="polyExpanded">
+        <div class="poly-box-title">Forma expandida</div>
+        <div id="polyExpandedTex"></div>
+      </div>
+      <div class="poly-box" id="polyLagrangeFull">
+        <div class="poly-box-title">Forma de Lagrange</div>
+        <div id="polyLagrangeTex"></div>
+      </div>
+      <table class="coeff-table" id="polyCoeffTable">
+        <thead><tr><th>Potencia</th><th>Coeficiente (fracción)</th><th>Valor decimal</th></tr></thead>
+        <tbody id="polyCoeffBody"></tbody>
+      </table>
+      <div class="diff-table-wrap" id="diffTableWrap">
+        <div class="section-label" id="diffTableLabel">Tabla de Diferencias</div>
+        <div id="diffTableContainer"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div><!-- /main-grid -->
+</div><!-- /container -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="maybeClose(event)">
+<div class="modal" id="modalBox">
+  <div class="modal-header">
+    <div class="modal-title" id="modalTitle">Panel</div>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body" id="modalBody"></div>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  RATIONAL NUMBER ARITHMETIC  (fracciones exactas)
+// ═══════════════════════════════════════════════════════
+function gcd(a,b){a=Math.abs(Math.round(a));b=Math.abs(Math.round(b));while(b){[a,b]=[b,a%b];}return a||1;}
+function mkFrac(n,d=1){
+  // detect if n/d are "close enough" to rationals
+  if(d===0)return{n:NaN,d:1,ok:false};
+  const sign=((n<0)!=(d<0))?-1:1;
+  n=Math.abs(n); d=Math.abs(d);
+  // scale to integers
+  const scale=1e9;
+  const ni=Math.round(n*scale), di=Math.round(d*scale);
+  const g=gcd(ni,di);
+  return{n:sign*(ni/g),d:di/g,ok:true};
+}
+function fracAdd(a,b){return mkFrac(a.n*b.d+b.n*a.d, a.d*b.d);}
+function fracMul(a,b){return mkFrac(a.n*b.n, a.d*b.d);}
+function fracSub(a,b){return mkFrac(a.n*b.d-b.n*a.d, a.d*b.d);}
+function fracDiv(a,b){return mkFrac(a.n*b.d, a.d*b.n);}
+function fracNeg(a){return{n:-a.n,d:a.d,ok:a.ok};}
+function fracVal(a){return a.n/a.d;}
+function frac(v){return mkFrac(v,1);}
+
+// Check if a float is "close" to a simple fraction
+function toFracIfNice(v, maxDen=1000){
+  for(let d=1;d<=maxDen;d++){
+    const n=Math.round(v*d);
+    if(Math.abs(n/d-v)<1e-9){
+      const g=gcd(Math.abs(n),d);
+      return{n:n/g,d:d/g};
+    }
+  }
+  return null;
+}
+
+// Format a number as LaTeX fraction or decimal
+function numToLatex(v, forceFrac=false){
+  if(isNaN(v)||!isFinite(v))return'?';
+  if(Math.abs(v)<1e-12)return'0';
+  const nice=toFracIfNice(v,500);
+  if(nice && nice.d!==1){
+    const sign=nice.n<0?'-':'';
+    return`${sign}\\dfrac{${Math.abs(nice.n)}}{${nice.d}}`;
+  }
+  if(nice && nice.d===1) return `${nice.n}`;
+  // decimal
+  return fmtNum(v);
+}
+
+// Format coefficient in polynomial: sign + latex
+function coeffLatex(v, isFirst=false){
+  if(Math.abs(v)<1e-12)return{sign:'',abs:'0',skip:true};
+  const nice=toFracIfNice(v,500);
+  let absStr, sign;
+  if(nice){
+    sign = nice.n<0 ? '-' : '+';
+    const absN=Math.abs(nice.n);
+    if(nice.d===1) absStr=`${absN}`;
+    else absStr=`\\dfrac{${absN}}{${nice.d}}`;
+  } else {
+    sign = v<0 ? '-' : '+';
+    absStr = fmtNum(Math.abs(v));
+  }
+  if(isFirst) sign = (sign==='-'?'-':'');
+  return{sign, abs:absStr, skip:false};
+}
+
+// ═══════════════════════════════════════════════════════
+//  POLYNOMIAL ALGEBRA  (array of coefficients, index=power)
+// ═══════════════════════════════════════════════════════
+// poly = [a0, a1, a2, ...] means a0 + a1*x + a2*x^2 + ...
+function polyMul(p, q){
+  const res=Array(p.length+q.length-1).fill(0);
+  for(let i=0;i<p.length;i++) for(let j=0;j<q.length;j++) res[i+j]+=p[i]*q[j];
+  return res;
+}
+function polyAdd(p, q){
+  const n=Math.max(p.length,q.length),res=[];
+  for(let i=0;i<n;i++) res.push((p[i]||0)+(q[i]||0));
+  return res;
+}
+function polyScale(p, c){ return p.map(v=>v*c); }
+function polyTrim(p){ let a=[...p]; while(a.length>1&&Math.abs(a[a.length-1])<1e-12)a.pop(); return a; }
+
+// Lagrange basis as polynomial
+function lagrangeBasisPoly(pts, k){
+  const n=pts.length;
+  let poly=[1];
+  let denom=1;
+  for(let j=0;j<n;j++){
+    if(j===k)continue;
+    const xj=pts[j].x;
+    poly=polyMul(poly, [-xj, 1]); // (x - xj)
+    denom*=(pts[k].x - xj);
+  }
+  return polyScale(poly, 1/denom);
+}
+
+// Full Lagrange interpolating polynomial as coefficient array
+function lagrangePolyCoeffs(pts){
+  const n=pts.length;
+  let result=Array(n).fill(0);
+  for(let k=0;k<n;k++){
+    const basis=lagrangeBasisPoly(pts,k);
+    const scaled=polyScale(basis, pts[k].y);
+    result=polyAdd(result,scaled);
+  }
+  return polyTrim(result);
+}
+
+// ═══════════════════════════════════════════════════════
+//  LaTeX STRING BUILDERS
+// ═══════════════════════════════════════════════════════
+function polyCoeffsToLatex(coeffs){
+  const n=coeffs.length;
+  if(n===0)return'0';
+  let terms=[];
+  for(let i=n-1;i>=0;i--){
+    const v=coeffs[i];
+    if(Math.abs(v)<1e-12)continue;
+    const {sign,abs,skip}=coeffLatex(v, terms.length===0);
+    if(skip)continue;
+    let xpart='';
+    if(i===0) xpart='';
+    else if(i===1) xpart='x';
+    else xpart=`x^{${i}}`;
+    if(abs==='1'&&xpart!=='') terms.push(`${sign}${xpart}`);
+    else terms.push(`${sign}${abs}${xpart}`);
+  }
+  return terms.length?terms.join(''):'0';
+}
+
+function lagrangeFullLatex(pts){
+  const n=pts.length;
+  const lines=[];
+  for(let k=0;k<n;k++){
+    const numFactors=[];
+    const denFactors=[];
+    for(let j=0;j<n;j++){
+      if(j===k){
+        const xj=pts[j].x;
+        const nice=toFracIfNice(xj,300);
+        let xjStr;
+        if(nice&&nice.d!==1) xjStr=`\\dfrac{${nice.n<0?'-':''}${Math.abs(nice.n)}}{${nice.d}}`;
+        else if(nice) xjStr=`${nice.n}`;
+        else xjStr=fmtNum(xj);
+        continue;
+      }
+      const xj=pts[j].x;
+      const diff=pts[k].x-xj;
+      const niceXj=toFracIfNice(xj,300);
+      const niceD=toFracIfNice(diff,300);
+      const xjStr=niceXj?(niceXj.d===1?`${niceXj.n}`:`\\dfrac{${niceXj.n}}{${niceXj.d}}`):fmtNum(xj);
+      const diffStr=niceD?(niceD.d===1?`${niceD.n}`:`\\dfrac{${niceD.n}}{${niceD.d}}`):fmtNum(diff);
+      const sign=xj>=0?'-':'+';
+      const absXjStr=niceXj?(niceXj.d===1?`${Math.abs(niceXj.n)}`:`\\dfrac{${Math.abs(niceXj.n)}}{${niceXj.d}}`):fmtNum(Math.abs(xj));
+      numFactors.push(`\\left(x ${sign} ${absXjStr}\\right)`);
+      denFactors.push(diffStr);
+    }
+    const yi=pts[k].y;
+    const {sign,abs}=coeffLatex(yi, k===0);
+    const num=numFactors.join('');
+    const den=denFactors.join('\\cdot');
+    lines.push(`${k===0?abs:(sign+abs)} \\cdot \\dfrac{${num}}{${den}}`);
+  }
+  return`P_{${n-1}}(x) = ${lines.join('\\\\\n+\\; ')}`;
+}
+
+function newtonDividedLatex(pts, F){
+  const n=pts.length;
+  let tex=`P_{${n-1}}(x) = `;
+  const terms=[];
+  for(let k=0;k<n;k++){
+    const coef=F[0][k];
+    if(Math.abs(coef)<1e-12&&k>0)continue;
+    const {sign,abs,skip}=coeffLatex(coef,k===0);
+    if(skip)continue;
+    let omega='';
+    for(let j=0;j<k;j++){
+      const xj=pts[j].x;
+      const nice=toFracIfNice(xj,300);
+      const xjStr=nice?(nice.d===1?`${nice.n}`:`\\dfrac{${nice.n}}{${nice.d}}`):fmtNum(xj);
+      const sign2=xj>=0?'-':'+';
+      const absXjStr=nice?(nice.d===1?`${Math.abs(nice.n)}`:`\\dfrac{${Math.abs(nice.n)}}{${nice.d}}`):fmtNum(Math.abs(xj));
+      omega+=`\\left(x ${sign2} ${absXjStr}\\right)`;
+    }
+    terms.push(`${k===0?abs:(sign+abs)}${omega}`);
+  }
+  return tex+terms.join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let currentMethod='lagrange', N=4, currentTrueFn=null, trueFnStr='', splineCache=null;
+let polyView='expanded'; // 'expanded' | 'lagrange' | 'coeffs'
+const METHODS={lagrange:'Lagrange',newton_forward:'Newton ↑',newton_backward:'Newton ↓',divided:'Div. Divididas',linear:'Lineal',spline:'Spline Cúbico'};
+const COLORS=['#ce93d8','#80cbc4','#ffcc02','#ff8a65','#a5d6a7','#90caf9','#f48fb1','#ffe082'];
+
+const PRESETS=[
+  {name:'sin(x)',desc:'x∈[0,π]',fn:x=>Math.sin(x),pts:[0,Math.PI/4,Math.PI/2,3*Math.PI/4,Math.PI]},
+  {name:'eˣ',desc:'x∈[0,2]',fn:x=>Math.exp(x),pts:[0,.5,1,1.5,2]},
+  {name:'1/(1+x²)',desc:'Runge',fn:x=>1/(1+x*x),pts:[-2,-1,0,1,2]},
+  {name:'ln(x)',desc:'x∈[1,3]',fn:x=>Math.log(x),pts:[1,1.5,2,2.5,3]},
+  {name:'x²−2x',desc:'cuadrática',fn:x=>x*x-2*x,pts:[0,1,2,3]},
+  {name:'cos(x)',desc:'x∈[0,π]',fn:x=>Math.cos(x),pts:[0,Math.PI/3,2*Math.PI/3,Math.PI]}
+];
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+function init(){
+  document.querySelectorAll('.method-tab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.method-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentMethod=btn.dataset.method;
+      document.getElementById('statMethod').textContent=METHODS[currentMethod];
+      computeAll();
+    });
+  });
+  const sel=document.getElementById('numPoints');
+  for(let i=3;i<=10;i++){const o=document.createElement('option');o.value=i;o.textContent=i+' pts';if(i===N)o.selected=true;sel.appendChild(o);}
+  sel.addEventListener('change',()=>{N=+sel.value;buildPointsTable();computeAll();});
+  buildPresets(); buildPointsTable(); loadPreset(2); computeAll();
+  const cv=document.getElementById('mainCanvas');
+  cv.addEventListener('mousemove',onCanvasHover);
+  cv.addEventListener('mouseleave',()=>{document.getElementById('tooltip').style.display='none';});
+  window.addEventListener('resize',()=>computeAll());
+}
+
+function buildPresets(){
+  const g=document.getElementById('presetGrid');
+  PRESETS.forEach((p,i)=>{
+    const btn=document.createElement('button');btn.className='preset-btn';
+    btn.innerHTML=`<div class="preset-name">${p.name}</div><div class="preset-desc">${p.desc}</div>`;
+    btn.onclick=()=>{currentTrueFn=p.fn;trueFnStr=p.name;loadPreset(i);computeAll();};
+    g.appendChild(btn);
+  });
+}
+
+function buildPointsTable(){
+  const body=document.getElementById('pointsBody');
+  const existing=getPoints();body.innerHTML='';
+  for(let i=0;i<N;i++){
+    const row=document.createElement('tr');
+    const xi=existing[i]?fmtInput(existing[i].x):'';
+    const yi=existing[i]?fmtInput(existing[i].y):'';
+    row.innerHTML=`<td style="color:var(--text3);font-family:var(--mono);font-size:10px;text-align:center">${i}</td>
+      <td><input type="number" step="any" class="xi" value="${xi}" placeholder="x${i}" onchange="computeAll()"></td>
+      <td><input type="number" step="any" class="yi" value="${yi}" placeholder="y${i}" onchange="computeAll()"></td>`;
+    body.appendChild(row);
+  }
+}
+
+function fmtInput(v){return isNaN(v)?'':+v.toFixed(7);}
+
+function loadPreset(i){
+  const p=PRESETS[i];currentTrueFn=p.fn;trueFnStr=p.name;
+  const xs=p.pts.slice(0,N);
+  const sel=document.getElementById('numPoints');
+  N=Math.max(3,Math.min(xs.length,10));sel.value=N;
+  buildPointsTable();
+  const xI=document.querySelectorAll('.xi'),yI=document.querySelectorAll('.yi');
+  for(let j=0;j<N;j++){if(xs[j]!==undefined){xI[j].value=+xs[j].toFixed(6);yI[j].value=+p.fn(xs[j]).toFixed(7);}}
+}
+
+function getPoints(){
+  const xs=document.querySelectorAll('.xi'),ys=document.querySelectorAll('.yi'),pts=[];
+  for(let i=0;i<xs.length;i++){const x=parseFloat(xs[i].value),y=parseFloat(ys[i].value);if(!isNaN(x)&&!isNaN(y))pts.push({x,y});}
+  return pts;
+}
+
+function clearPoints(){
+  document.querySelectorAll('.xi,.yi').forEach(inp=>inp.value='');
+  currentTrueFn=null;
+  ['polyExpanded','polyLagrangeFull'].forEach(id=>document.getElementById(id).classList.remove('visible'));
+  document.getElementById('polyCoeffTable').classList.remove('visible');
+  document.getElementById('diffTableWrap').classList.remove('visible');
+  document.getElementById('evalResult').classList.remove('visible');
+  clearCanvas();
+}
+
+function togglePolyView(v){polyView=v;computeAll();}
+
+// ═══════════════════════════════════════════════════════
+//  INTERPOLATION
+// ═══════════════════════════════════════════════════════
+function lagrange(pts,x){let r=0,n=pts.length;for(let i=0;i<n;i++){let L=1;for(let j=0;j<n;j++){if(i!==j)L*=(x-pts[j].x)/(pts[i].x-pts[j].x);}r+=pts[i].y*L;}return r;}
+function lagrangeBasisEval(pts,i,x){let L=1;for(let j=0;j<pts.length;j++){if(i!==j)L*=(x-pts[j].x)/(pts[i].x-pts[j].x);}return L;}
+function dividedDiffTable(pts){const n=pts.length,F=Array.from({length:n},(_,i)=>Array(n).fill(0));for(let i=0;i<n;i++)F[i][0]=pts[i].y;for(let j=1;j<n;j++)for(let i=0;i<n-j;i++)F[i][j]=(F[i+1][j-1]-F[i][j-1])/(pts[i+j].x-pts[i].x);return F;}
+function newtonDivided(pts,x){const F=dividedDiffTable(pts),n=pts.length;let r=F[0][0],prod=1;for(let k=1;k<n;k++){prod*=(x-pts[k-1].x);r+=F[0][k]*prod;}return r;}
+function forwardDiffTable(ys){const n=ys.length,D=[ys.slice()];for(let k=1;k<n;k++){const row=[];for(let i=0;i<n-k;i++)row.push(D[k-1][i+1]-D[k-1][i]);D.push(row);}return D;}
+function backwardDiffTable(ys){const n=ys.length,D=[ys.slice()];for(let k=1;k<n;k++){const row=[];for(let i=k;i<n;i++)row.push(D[k-1][i]-D[k-1][i-1]);D.push(row);}return D;}
+function newtonForward(pts,x){const h=pts[1].x-pts[0].x,ys=pts.map(p=>p.y),D=forwardDiffTable(ys),t=(x-pts[0].x)/h;let r=D[0][0],c=1;for(let k=1;k<pts.length;k++){c*=(t-(k-1))/k;r+=c*D[k][0];}return r;}
+function newtonBackward(pts,x){const h=pts[1].x-pts[0].x,ys=pts.map(p=>p.y),D=backwardDiffTable(ys),n=pts.length,t=(x-pts[n-1].x)/h;let r=D[0][n-1],c=1;for(let k=1;k<n;k++){c*=(t+(k-1))/k;r+=c*D[k][n-k-1];}return r;}
+function piecewiseLinear(pts,x){const n=pts.length;if(x<=pts[0].x)return pts[0].y;if(x>=pts[n-1].x)return pts[n-1].y;for(let i=0;i<n-1;i++){if(x>=pts[i].x&&x<=pts[i+1].x){const t=(x-pts[i].x)/(pts[i+1].x-pts[i].x);return pts[i].y*(1-t)+pts[i+1].y*t;}}return NaN;}
+function naturalCubicSpline(pts){const n=pts.length,h=[],alpha=[],l=[],mu=[],z=[],a=pts.map(p=>p.y);for(let i=0;i<n-1;i++)h[i]=pts[i+1].x-pts[i].x;for(let i=1;i<n-1;i++)alpha[i]=(3/h[i])*(a[i+1]-a[i])-(3/h[i-1])*(a[i]-a[i-1]);l[0]=1;mu[0]=0;z[0]=0;for(let i=1;i<n-1;i++){l[i]=2*(pts[i+1].x-pts[i-1].x)-h[i-1]*mu[i-1];mu[i]=h[i]/l[i];z[i]=(alpha[i]-h[i-1]*z[i-1])/l[i];}l[n-1]=1;z[n-1]=0;const c=Array(n).fill(0),b=[],d=[];for(let j=n-2;j>=0;j--){c[j]=z[j]-mu[j]*c[j+1];b[j]=(a[j+1]-a[j])/h[j]-h[j]*(c[j+1]+2*c[j])/3;d[j]=(c[j+1]-c[j])/(3*h[j]);}return{a,b,c,d,pts,h};}
+function evalSpline(sp,x){const{a,b,c,d,pts}=sp,n=pts.length;if(x<=pts[0].x)return a[0];if(x>=pts[n-1].x)return a[n-1];for(let i=0;i<n-1;i++){if(x>=pts[i].x&&x<=pts[i+1].x){const dx=x-pts[i].x;return a[i]+b[i]*dx+c[i]*dx*dx+d[i]*dx*dx*dx;}}return NaN;}
+function interpolate(pts,x){const s=[...pts].sort((a,b)=>a.x-b.x);switch(currentMethod){case'lagrange':return lagrange(s,x);case'newton_forward':return newtonForward(s,x);case'newton_backward':return newtonBackward(s,x);case'divided':return newtonDivided(s,x);case'linear':return piecewiseLinear(s,x);case'spline':return splineCache?evalSpline(splineCache,x):lagrange(s,x);}return NaN;}
+
+// ═══════════════════════════════════════════════════════
+//  COMPUTE ALL
+// ═══════════════════════════════════════════════════════
+function computeAll(){
+  const pts=getPoints();
+  const errEl=document.getElementById('errorMsg');
+  if(pts.length<2){clearCanvas();return;}
+  const xs=pts.map(p=>p.x);
+  if(new Set(xs.map(v=>+v.toFixed(10))).size<pts.length){errEl.classList.add('visible');return;}
+  errEl.classList.remove('visible');
+  const sorted=[...pts].sort((a,b)=>a.x-b.x);
+  if(currentMethod==='spline')splineCache=naturalCubicSpline(sorted);
+  document.getElementById('statDegree').textContent=['linear','spline'].includes(currentMethod)?'—':(sorted.length-1);
+  document.getElementById('statNodes').textContent=sorted.length;
+  buildPolyDisplay(sorted);
+  buildDiffTable(sorted);
+  drawChart(sorted);
+}
+
+// ═══════════════════════════════════════════════════════
+//  POLYNOMIAL DISPLAY — LaTeX
+// ═══════════════════════════════════════════════════════
+function buildPolyDisplay(sorted){
+  const expEl=document.getElementById('polyExpanded');
+  const lagEl=document.getElementById('polyLagrangeFull');
+  const cTbl=document.getElementById('polyCoeffTable');
+  expEl.classList.remove('visible');lagEl.classList.remove('visible');cTbl.classList.remove('visible');
+
+  const isPolyMethod=['lagrange','newton_forward','newton_backward','divided'].includes(currentMethod);
+  if(!isPolyMethod){
+    if(currentMethod==='linear') renderSplineLatex(sorted,'linear');
+    if(currentMethod==='spline') renderSplineLatex(sorted,'spline');
+    return;
+  }
+
+  // Compute expanded polynomial coefficients
+  const coeffs=lagrangePolyCoeffs(sorted);
+  const n=sorted.length;
+
+  if(polyView==='expanded'||polyView==='lagrange'||polyView==='coeffs'){
+    // Always compute expanded form
+    const expandedTex=`\\[P_{${n-1}}(x) = ${polyCoeffsToLatex(coeffs)}\\]`;
+    document.getElementById('polyExpandedTex').innerHTML=expandedTex;
+    expEl.classList.add('visible');
+  }
+
+  if(polyView==='lagrange'){
+    const lagTex=`\\[${lagrangeFullLatex(sorted)}\\]`;
+    document.getElementById('polyLagrangeTex').innerHTML=lagTex;
+    lagEl.classList.add('visible');
+  }
+
+  if(polyView==='coeffs'){
+    const body=document.getElementById('polyCoeffBody');body.innerHTML='';
+    for(let i=coeffs.length-1;i>=0;i--){
+      const v=coeffs[i];
+      if(Math.abs(v)<1e-12)continue;
+      const nice=toFracIfNice(v,500);
+      let fracStr='—', decStr=fmtNum(v);
+      if(nice){
+        if(nice.d===1) fracStr=`$${nice.n}$`;
+        else fracStr=`$\\dfrac{${nice.n}}{${nice.d}}$`;
+        decStr=fmtNum(nice.n/nice.d);
+      }
+      const xStr=i===0?'$1$':(i===1?'$x$':`$x^{${i}}$`);
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${xStr}</td><td class="frac">${fracStr}</td><td>${decStr}</td>`;
+      body.appendChild(tr);
+    }
+    cTbl.classList.add('visible');
+  }
+
+  // Typeset MathJax
+  if(window.MathJax&&MathJax.typesetPromise){
+    MathJax.typesetPromise([expEl,lagEl,cTbl]).catch(console.warn);
+  }
+}
+
+function renderSplineLatex(sorted, type){
+  const expEl=document.getElementById('polyExpanded');
+  const n=sorted.length;
+  let tex='';
+  if(type==='linear'){
+    tex='\\[ P(x) = \\begin{cases} ';
+    const seg=[];
+    for(let i=0;i<n-1;i++){
+      const x0=sorted[i].x,x1=sorted[i+1].x,y0=sorted[i].y,y1=sorted[i+1].y;
+      const slope=(y1-y0)/(x1-x0);
+      const intercept=y0-slope*x0;
+      const sL=numToLatex(slope), cL=numToLatex(intercept);
+      const x0L=numToLatex(x0), x1L=numToLatex(x1);
+      const sign=intercept>=0?'+':'-';
+      const absC=numToLatex(Math.abs(intercept));
+      seg.push(`${sL}\\,x ${sign} ${absC} & ${x0L} \\le x \\le ${x1L}`);
+    }
+    tex+=seg.join(' \\\\ ')+' \\end{cases} \\]';
+  } else {
+    // spline: show first few tramos
+    tex='\\[ S(x) = S_i(x) \\text{ en cada subintervalo } [x_i, x_{i+1}] \\]';
+    tex+='\\[ S_i(x) = a_i + b_i(x-x_i) + c_i(x-x_i)^2 + d_i(x-x_i)^3 \\]';
+    if(splineCache){
+      const{a,b,c,d}=splineCache;
+      const rows=[];
+      for(let i=0;i<n-1;i++){
+        rows.push(`S_{${i}}: ${numToLatex(a[i])} ${b[i]>=0?'+':'-'} ${numToLatex(Math.abs(b[i]))}(x${sorted[i].x>=0?'-':'+'}${numToLatex(Math.abs(sorted[i].x))}) ${c[i]>=0?'+':'-'} ${numToLatex(Math.abs(c[i]))}(\\cdots)^2 ${d[i]>=0?'+':'-'} ${numToLatex(Math.abs(d[i]))}(\\cdots)^3`);
+      }
+      tex+='\\[\\small '+rows.slice(0,4).join(' \\quad ')+(n-1>4?'\\,\\ldots':'')+'\\]';
+    }
+  }
+  document.getElementById('polyExpandedTex').innerHTML=tex;
+  expEl.classList.add('visible');
+  if(window.MathJax&&MathJax.typesetPromise) MathJax.typesetPromise([expEl]).catch(console.warn);
+}
+
+// ═══════════════════════════════════════════════════════
+//  DIFF TABLE
+// ═══════════════════════════════════════════════════════
+function buildDiffTable(sorted){
+  const wrap=document.getElementById('diffTableWrap'),label=document.getElementById('diffTableLabel'),container=document.getElementById('diffTableContainer');
+  container.innerHTML='';
+  if(!['newton_forward','newton_backward','divided'].includes(currentMethod)){wrap.classList.remove('visible');return;}
+  wrap.classList.add('visible');
+  if(currentMethod==='divided'){
+    label.textContent='Diferencias Divididas';
+    const F=dividedDiffTable(sorted),n=sorted.length,tbl=document.createElement('table');tbl.className='diff-table';
+    let h='<tr><th>i</th><th>xᵢ</th><th>f[xᵢ]</th>';for(let k=1;k<n;k++)h+=`<th>f[·,${k}]</th>`;h+='</tr>';tbl.innerHTML=h;
+    for(let i=0;i<n;i++){let r=`<tr><td>${i}</td><td>${fmtNum(sorted[i].x)}</td>`;for(let j=0;j<n-i;j++){const cls=i===0?' class="highlight"':'';r+=`<td${cls}>${fmtNum(F[i][j])}</td>`;}for(let j=n-i;j<n;j++)r+='<td>—</td>';r+='</tr>';tbl.innerHTML+=r;}
+    container.appendChild(tbl);
+  } else {
+    const ys=sorted.map(p=>p.y),D=currentMethod==='newton_forward'?forwardDiffTable(ys):backwardDiffTable(ys),n=sorted.length;
+    label.textContent=currentMethod==='newton_forward'?'Δ Progresivas':'Δ Regresivas';
+    const tbl=document.createElement('table');tbl.className='diff-table';
+    let h='<tr><th>i</th><th>xᵢ</th><th>yᵢ</th>';for(let k=1;k<n;k++)h+=`<th>Δ${k}y</th>`;h+='</tr>';tbl.innerHTML=h;
+    for(let i=0;i<n;i++){let r=`<tr><td>${i}</td><td>${fmtNum(sorted[i].x)}</td><td class="highlight">${fmtNum(D[0][i])}</td>`;for(let k=1;k<n;k++){const val=D[k]&&D[k][currentMethod==='newton_forward'?i:(i-k)]!==undefined?D[k][currentMethod==='newton_forward'?i:(i-k)]:null;r+=val!==null?`<td>${fmtNum(val)}</td>`:'<td>—</td>';}r+='</tr>';tbl.innerHTML+=r;}
+    container.appendChild(tbl);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  CANVAS
+// ═══════════════════════════════════════════════════════
+let lastSorted=[],lastXmin=0,lastXmax=1,lastYmin=-1,lastYmax=1,lastPad={};
+
+function drawChart(sorted){
+  const canvas=document.getElementById('mainCanvas');
+  const dpr=window.devicePixelRatio||1,W=canvas.parentElement.clientWidth,H=400;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';canvas.width=W*dpr;canvas.height=H*dpr;
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const pad={top:20,right:20,bottom:38,left:52};
+  const cw=W-pad.left-pad.right,ch=H-pad.top-pad.bottom;
+  const xmin0=sorted[0].x,xmax0=sorted[sorted.length-1].x,xspan=xmax0-xmin0||2;
+  const xmin=xmin0-xspan*.1,xmax=xmax0+xspan*.1;
+  const NS=500;
+  const ys_curve=[];
+  for(let i=0;i<=NS;i++){const x=xmin+(xmax-xmin)*i/NS;ys_curve.push(interpolate(sorted,x));}
+  const showTrue=document.getElementById('showTrueFunc').checked&&currentTrueFn;
+  const showErrC=document.getElementById('showErrorCurve').checked&&currentTrueFn;
+  let ys_true=[];
+  if(showTrue||showErrC){for(let i=0;i<=NS;i++){const x=xmin+(xmax-xmin)*i/NS;ys_true.push(currentTrueFn(x));}}
+  const allY=[...sorted.map(p=>p.y),...ys_curve.filter(v=>isFinite(v)&&!isNaN(v))];
+  if(showTrue)allY.push(...ys_true.filter(v=>isFinite(v)));
+  let ymin=Math.min(...allY),ymax=Math.max(...allY);
+  const yspan=ymax-ymin||2;ymin-=yspan*.12;ymax+=yspan*.12;
+  lastSorted=sorted;lastXmin=xmin;lastXmax=xmax;lastYmin=ymin;lastYmax=ymax;lastPad=pad;
+  const toS=(x,y)=>({sx:pad.left+(x-xmin)/(xmax-xmin)*cw,sy:pad.top+(1-(y-ymin)/(ymax-ymin))*ch});
+  ctx.fillStyle='#181b22';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(37,41,50,.8)';ctx.lineWidth=1;
+  for(let i=0;i<=8;i++){const x=xmin+(xmax-xmin)*i/8;const{sx}=toS(x,0);ctx.beginPath();ctx.moveTo(sx,pad.top);ctx.lineTo(sx,H-pad.bottom);ctx.stroke();}
+  for(let i=0;i<=6;i++){const y=ymin+(ymax-ymin)*i/6;const{sy}=toS(0,y);ctx.beginPath();ctx.moveTo(pad.left,sy);ctx.lineTo(W-pad.right,sy);ctx.stroke();}
+  ctx.strokeStyle='rgba(79,195,247,.25)';ctx.lineWidth=1;
+  if(ymin<0&&ymax>0){const{sy}=toS(0,0);ctx.beginPath();ctx.moveTo(pad.left,sy);ctx.lineTo(W-pad.right,sy);ctx.stroke();}
+  if(xmin<0&&xmax>0){const{sx}=toS(0,0);ctx.beginPath();ctx.moveTo(sx,pad.top);ctx.lineTo(sx,H-pad.bottom);ctx.stroke();}
+  ctx.fillStyle='#4a5166';ctx.font='9px IBM Plex Mono';ctx.textAlign='center';
+  for(let i=0;i<=8;i++){const x=xmin+(xmax-xmin)*i/8;const{sx}=toS(x,0);ctx.fillText(fmtNum(x),sx,H-pad.bottom+13);}
+  ctx.textAlign='right';
+  for(let i=0;i<=6;i++){const y=ymin+(ymax-ymin)*i/6;const{sy}=toS(0,y);ctx.fillText(fmtNum(y),pad.left-5,sy+3);}
+  // Basis
+  const showBasis=document.getElementById('showBasis').checked&&currentMethod==='lagrange';
+  document.getElementById('legendBasis').style.display=showBasis?'flex':'none';
+  if(showBasis){for(let i=0;i<sorted.length;i++){ctx.strokeStyle=COLORS[i%COLORS.length];ctx.globalAlpha=.35;ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.beginPath();let first=true;for(let k=0;k<=NS;k++){const x=xmin+(xmax-xmin)*k/NS;const y=lagrangeBasisEval(sorted,i,x);if(!isFinite(y)||Math.abs(y)>20){first=true;continue;}const{sx,sy}=toS(x,y);if(first){ctx.moveTo(sx,sy);first=false;}else ctx.lineTo(sx,sy);}ctx.stroke();}ctx.setLineDash([]);ctx.globalAlpha=1;}
+  document.getElementById('legendTrue').style.display=showTrue?'flex':'none';
+  if(showTrue){ctx.strokeStyle='#69f0ae';ctx.lineWidth=1.5;ctx.globalAlpha=.75;ctx.setLineDash([6,4]);ctx.beginPath();let first=true;for(let i=0;i<=NS;i++){const x=xmin+(xmax-xmin)*i/NS;const y=ys_true[i];if(!isFinite(y)||isNaN(y)){first=true;continue;}const{sx,sy}=toS(x,y);if(first){ctx.moveTo(sx,sy);first=false;}else ctx.lineTo(sx,sy);}ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;}
+  document.getElementById('legendErr').style.display=showErrC?'flex':'none';
+  if(showErrC&&ys_true.length){const maxE=Math.max(...ys_true.map((t,i)=>Math.abs(ys_curve[i]-t)).filter(v=>isFinite(v)));ctx.strokeStyle='#ff5252';ctx.lineWidth=1;ctx.globalAlpha=.6;ctx.beginPath();let first=true;for(let i=0;i<=NS;i++){const x=xmin+(xmax-xmin)*i/NS;const e=Math.abs(ys_curve[i]-ys_true[i]);if(!isFinite(e)){first=true;continue;}const esc=(e/maxE)*(ch*.35)+pad.top+ch*.62;const sx=pad.left+(x-xmin)/(xmax-xmin)*cw;if(first){ctx.moveTo(sx,esc);first=false;}else ctx.lineTo(sx,esc);}ctx.stroke();ctx.globalAlpha=1;}
+  ctx.strokeStyle='#4fc3f7';ctx.lineWidth=2.5;ctx.shadowColor='rgba(79,195,247,.4)';ctx.shadowBlur=8;ctx.globalAlpha=1;ctx.beginPath();let first=true;for(let i=0;i<=NS;i++){const x=xmin+(xmax-xmin)*i/NS;const y=ys_curve[i];if(!isFinite(y)||isNaN(y)||Math.abs(y-ymin)/(ymax-ymin)>3){first=true;continue;}const{sx,sy}=toS(x,y);if(first){ctx.moveTo(sx,sy);first=false;}else ctx.lineTo(sx,sy);}ctx.stroke();ctx.shadowBlur=0;
+  sorted.forEach((p,i)=>{const{sx,sy}=toS(p.x,p.y);ctx.beginPath();ctx.arc(sx,sy,5,0,Math.PI*2);ctx.fillStyle='#ffd54f';ctx.shadowColor='rgba(255,213,79,.6)';ctx.shadowBlur=10;ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#0a0c10';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle='#ffd54f';ctx.font='9px IBM Plex Mono';ctx.textAlign='center';ctx.fillText(`x${i}`,sx,sy-10);});
+  const maxErr=Math.max(...sorted.map(p=>Math.abs(interpolate(sorted,p.x)-p.y)));
+  document.getElementById('statError').textContent=maxErr<1e-10?'≈ 0':maxErr.toExponential(2);
+}
+function clearCanvas(){const cv=document.getElementById('mainCanvas');cv.getContext('2d').clearRect(0,0,cv.width,cv.height);}
+function onCanvasHover(e){
+  if(!lastSorted.length)return;
+  const cv=document.getElementById('mainCanvas'),rect=cv.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top,W=rect.width,H=rect.height;
+  const pad=lastPad,cw=W-pad.left-pad.right;
+  if(mx<pad.left||mx>W-pad.right||my<pad.top||my>H-pad.bottom){document.getElementById('tooltip').style.display='none';return;}
+  const x=lastXmin+(mx-pad.left)/cw*(lastXmax-lastXmin);
+  const y=interpolate(lastSorted,x);
+  let tip=`x=${fmtNum(x)}  P(x)=${fmtNum(y)}`;
+  if(currentTrueFn){const ty=currentTrueFn(x);tip+=`  |err|=${fmtNum(Math.abs(y-ty))}`;}
+  const tt=document.getElementById('tooltip');tt.textContent=tip;tt.style.display='block';tt.style.left=(mx+14)+'px';tt.style.top=(my-8)+'px';
+}
+
+// Evaluate with LaTeX output
+function evaluateAt(){
+  const pts=getPoints();if(pts.length<2)return;
+  const x=parseFloat(document.getElementById('evalX').value);if(isNaN(x))return;
+  const sorted=[...pts].sort((a,b)=>a.x-b.x);
+  if(currentMethod==='spline')splineCache=naturalCubicSpline(sorted);
+  const y=interpolate(sorted,x);
+  const xL=numToLatex(x), yL=numToLatex(y);
+  let tex=`\\( P(${xL}) = ${yL} \\)`;
+  if(currentTrueFn){
+    const ty=currentTrueFn(x);
+    const tyL=numToLatex(ty);
+    const eL=numToLatex(Math.abs(y-ty));
+    tex+=`<br>\\( f(${xL}) = ${tyL} \\)<br>\\( |\\varepsilon| = ${eL} \\)`;
+  }
+  const el=document.getElementById('evalResult');el.innerHTML=tex;el.classList.add('visible');
+  if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([el]).catch(console.warn);
+}
+
+// Format number
+function fmtNum(v){if(isNaN(v)||!isFinite(v))return'—';if(Math.abs(v)<1e-11)return'0';if(Math.abs(v)>=1e5||(Math.abs(v)<1e-4&&v!==0))return v.toExponential(4);return+v.toFixed(6)+'';}
+
+// ═══════════════════════════════════════════════════════
+//  FUNCTION PARSER
+// ═══════════════════════════════════════════════════════
+function parseFn(str){
+  const clean=str.trim().replace(/\^/g,'**').replace(/\bsin\b/g,'Math.sin').replace(/\bcos\b/g,'Math.cos').replace(/\btan\b/g,'Math.tan').replace(/\bexp\b/g,'Math.exp').replace(/\bln\b/g,'Math.log').replace(/\blog\b/g,'Math.log10').replace(/\bsqrt\b/g,'Math.sqrt').replace(/\babs\b/g,'Math.abs').replace(/\bpi\b/g,'Math.PI').replace(/\be\b/g,'Math.E');
+  if(/window|document|fetch|eval|Function|import|require|alert|location/i.test(clean))throw new Error('Función no permitida');
+  return new Function('x','return '+clean);
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════════════════════
+const MODAL_TITLES={fngen:'𝑓  Generar Puntos desde Función',error:'⚠  Análisis de Error',apps:'◈  Aplicaciones',nn:'⬡  Redes Neuronales e Interpolación'};
+function openModal(type){
+  document.getElementById('modalTitle').textContent=MODAL_TITLES[type]||'Panel';
+  document.getElementById('modalBody').innerHTML=buildModalContent(type);
+  document.getElementById('modalOverlay').classList.add('open');
+  if(type==='nn')setTimeout(initNNDemo,50);
+  if(type==='error')setTimeout(()=>{buildErrorAnalysis();},30);
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+function maybeClose(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
+function buildModalContent(type){switch(type){case'fngen':return buildFnGenContent();case'error':return buildErrorContent();case'apps':return buildAppsContent();case'nn':return buildNNContent();}return'';}
+
+// ─── FUNCIÓN GENERADORA ───
+function buildFnGenContent(){return`
+<div class="fn-hint">Sintaxis: sin(x), cos(x), exp(x), ln(x), sqrt(x), abs(x), pi, e &nbsp;|&nbsp; Potencia: ^</div>
+<div class="fn-input-wrap"><input class="fn-input" id="fnExprInput" placeholder="Ej: sin(x)*exp(-0.2*x)" value="sin(x)*exp(-0.3*x)"></div>
+<div class="fn-error" id="fnParseError">Error al parsear</div>
+<div style="margin-bottom:10px">
+  <div class="range-label">Rango</div>
+  <div class="range-row">
+    <div><div class="range-label">a</div><input type="number" id="fnRangeA" value="0" step="0.1"></div>
+    <div><div class="range-label">b</div><input type="number" id="fnRangeB" value="6.28" step="0.1"></div>
+    <div><div class="range-label">N nodos</div><input type="number" id="fnNNodes" value="5" min="3" max="10" step="1"></div>
+  </div>
+</div>
+<div class="section-label" style="margin-bottom:8px">Distribución de nodos</div>
+<div class="node-btns">
+  <button class="node-btn" onclick="generateNodes('equi')">Equiespaciados</button>
+  <button class="node-btn" onclick="generateNodes('chebyshev')">Chebyshev</button>
+  <button class="node-btn" onclick="generateNodes('random')">Aleatorio</button>
+  <button class="node-btn" onclick="generateNodes('clustered')">Denso en extremos</button>
+</div>
+<div class="divider"></div>
+<div class="deriv-row"><label>Max|f⁽ⁿ⁺¹⁾|=</label><input type="number" id="maxDerivInput" placeholder="1.0" step="any" value="1"></div>
+<div class="btn-row" style="margin-top:10px">
+  <button class="btn btn-accent" onclick="applyFnGenerator()">▶ Aplicar y Calcular</button>
+  <button class="btn btn-ghost" onclick="previewFn()">Vista previa</button>
+</div>
+<canvas id="fnPreviewCanvas" height="150" style="width:100%;margin-top:10px;border-radius:6px;background:#181b22;display:none"></canvas>
+`;}
+
+function generateNodes(type){
+  const a=parseFloat(document.getElementById('fnRangeA').value),b=parseFloat(document.getElementById('fnRangeB').value),n=parseInt(document.getElementById('fnNNodes').value)||5;
+  let xs=[];
+  if(type==='equi'){for(let i=0;i<n;i++)xs.push(a+(b-a)*i/(n-1));}
+  else if(type==='chebyshev'){for(let i=0;i<n;i++)xs.push((a+b)/2+(b-a)/2*Math.cos((2*i+1)*Math.PI/(2*n)));}
+  else if(type==='random'){const arr=[];for(let i=0;i<n;i++)arr.push(Math.random());arr.sort((u,v)=>u-v);xs=arr.map(v=>a+v*(b-a));}
+  else if(type==='clustered'){for(let i=0;i<n;i++){const t=i/(n-1);xs.push(a+(b-a)*(1-Math.cos(Math.PI*t))/2);}}
+  xs.sort((u,v)=>u-v);
+  const err=document.getElementById('fnParseError');
+  try{const fn=parseFn(document.getElementById('fnExprInput').value);err.classList.remove('visible');previewFn(xs,fn);}catch(e){err.textContent='⚠ '+e.message;err.classList.add('visible');}
+  return xs;
+}
+
+function previewFn(xsArg,fnArg){
+  const err=document.getElementById('fnParseError');
+  let fn;try{fn=fnArg||parseFn(document.getElementById('fnExprInput').value);err.classList.remove('visible');}catch(e){err.textContent='⚠ '+e.message;err.classList.add('visible');return;}
+  const a=parseFloat(document.getElementById('fnRangeA').value),b=parseFloat(document.getElementById('fnRangeB').value);
+  const cv=document.getElementById('fnPreviewCanvas');cv.style.display='block';
+  const dpr=window.devicePixelRatio||1,W=cv.parentElement.clientWidth||600,H=150;
+  cv.style.width=W+'px';cv.width=W*dpr;cv.height=H*dpr;
+  const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  const pad={top:8,right:8,bottom:24,left:40};const cw=W-pad.left-pad.right,ch=H-pad.top-pad.bottom;
+  const NS=300,xs=[],ys=[];
+  for(let i=0;i<=NS;i++){const x=a+(b-a)*i/NS;xs.push(x);try{ys.push(fn(x));}catch{ys.push(NaN);}}
+  const valid=ys.filter(v=>isFinite(v)&&!isNaN(v));if(!valid.length)return;
+  let ymin=Math.min(...valid),ymax=Math.max(...valid);const ysp=ymax-ymin||1;ymin-=ysp*.1;ymax+=ysp*.1;
+  const toS=(x,y)=>({sx:pad.left+(x-a)/(b-a)*cw,sy:pad.top+(1-(y-ymin)/(ymax-ymin))*ch});
+  ctx.fillStyle='#181b22';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='#4fc3f7';ctx.lineWidth=2;ctx.beginPath();let first=true;
+  for(let i=0;i<=NS;i++){const y=ys[i];if(!isFinite(y)||isNaN(y)){first=true;continue;}const{sx,sy}=toS(xs[i],y);if(first){ctx.moveTo(sx,sy);first=false;}else ctx.lineTo(sx,sy);}ctx.stroke();
+  if(xsArg){xsArg.forEach(x=>{try{const y=fn(x);const{sx,sy}=toS(x,y);ctx.beginPath();ctx.arc(sx,sy,4,0,Math.PI*2);ctx.fillStyle='#ffd54f';ctx.fill();}catch{}});}
+  ctx.fillStyle='#4a5166';ctx.font='9px IBM Plex Mono';ctx.textAlign='center';
+  for(let i=0;i<=4;i++){const x=a+(b-a)*i/4;const{sx}=toS(x,ymin);ctx.fillText(fmtNum(x),sx,H-pad.bottom+12);}
+}
+
+function applyFnGenerator(){
+  const err=document.getElementById('fnParseError');let fn;
+  try{fn=parseFn(document.getElementById('fnExprInput').value);err.classList.remove('visible');}catch(e){err.textContent='⚠ '+e.message;err.classList.add('visible');return;}
+  const a=parseFloat(document.getElementById('fnRangeA').value),b=parseFloat(document.getElementById('fnRangeB').value),n=parseInt(document.getElementById('fnNNodes').value)||5;
+  const xs=[];for(let i=0;i<n;i++)xs.push(a+(b-a)*i/(n-1));
+  currentTrueFn=fn;trueFnStr=document.getElementById('fnExprInput').value;
+  const sel=document.getElementById('numPoints');N=Math.max(3,Math.min(n,10));sel.value=N;
+  buildPointsTable();
+  const xI=document.querySelectorAll('.xi'),yI=document.querySelectorAll('.yi');
+  for(let j=0;j<N;j++){xI[j].value=+xs[j].toFixed(5);yI[j].value=+fn(xs[j]).toFixed(7);}
+  closeModal();computeAll();
+}
+
+// ─── ERROR ANALYSIS ───
+function buildErrorContent(){return`<div id="errorAnalysisContent"><div style="color:var(--text3);font-family:var(--mono);font-size:11px;padding:20px;text-align:center">Calculando...</div></div>`;}
+
+function buildErrorAnalysis(){
+  const pts=getPoints(),sorted=[...pts].sort((a,b)=>a.x-b.x),n=sorted.length;
+  const container=document.getElementById('errorAnalysisContent');if(!container)return;
+  if(pts.length<2){container.innerHTML='<div style="color:var(--text3);font-size:12px;padding:20px">Cargá puntos primero.</div>';return;}
+  const a=sorted[0].x,b=sorted[n-1].x,h=n>1?(b-a)/(n-1):1;
+  let maxDeriv=1;
+  if(currentTrueFn){const NS=1000;let mx=0;for(let i=0;i<=NS;i++){const x=a+(b-a)*i/NS;const dx=1e-4;try{let d=currentTrueFn(x);for(let k=0;k<n;k++)d=(currentTrueFn(x+dx*(k+1))-d)/dx;if(isFinite(d))mx=Math.max(mx,Math.abs(d));}catch{}}if(mx>0)maxDeriv=mx;}
+  const fact=k=>k<=1?1:k*fact(k-1);
+  const omega_max=Math.pow(h,n)*fact(n)/4;
+  const lagBound=maxDeriv*omega_max/fact(n);
+  if(currentMethod==='spline')splineCache=naturalCubicSpline(sorted);
+  const nodeErrors=sorted.map(p=>({x:p.x,exact:p.y,approx:interpolate(sorted,p.x),err:Math.abs(interpolate(sorted,p.x)-p.y)}));
+  const maxNodeErr=Math.max(...nodeErrors.map(e=>e.err));
+  let actualMaxErr=maxNodeErr,actualMeanErr=0;
+  if(currentTrueFn){const NS=500;let mx=0,sum=0;for(let i=0;i<=NS;i++){const x=a+(b-a)*i/NS;const e=Math.abs(interpolate(sorted,x)-currentTrueFn(x));if(isFinite(e)){mx=Math.max(mx,e);sum+=e;}}actualMaxErr=mx;actualMeanErr=sum/NS;}
+  const hL=numToLatex(h),nL=n-1, mL=maxDeriv.toExponential(3);
+
+  container.innerHTML=`
+<div class="modal-tabs">
+  <button class="modal-tab active" onclick="switchErrTab(this,'etab-bounds')">Cotas Teóricas</button>
+  <button class="modal-tab" onclick="switchErrTab(this,'etab-node')">Error en Nodos</button>
+  <button class="modal-tab" onclick="switchErrTab(this,'etab-formulas')">Fórmulas LaTeX</button>
+</div>
+
+<div class="modal-section active" id="etab-bounds">
+<div class="error-grid">
+  <div class="error-card">
+    <h3>Cota de Lagrange</h3>
+    <p>Para $n+1$ nodos en $[a,b]$, el error de interpolación satisface:</p>
+    <div class="formula-block">$$|f(x) - P_n(x)| \\leq \\frac{M_{n+1}}{(n+1)!} \\cdot |\\omega_{n+1}(x)|$$</div>
+    <p>donde $\\omega_{n+1}(x) = \\prod_{i=0}^{n}(x - x_i)$ y $M_{n+1} = \\max_{\\xi \\in [a,b]} |f^{(n+1)}(\\xi)|$</p>
+    <div class="formula-block gold">$$\\text{Cota estimada} \\approx ${lagBound.toExponential(3)}$$</div>
+    <div class="note">$M_{n+1}$ estimado numéricamente: ${maxDeriv.toExponential(3)}</div>
+  </div>
+  <div class="error-card">
+    <h3>Error Observado</h3>
+    <div class="formula-block gold">$$\\|P - f\\|_\\infty = ${fmtNum(actualMaxErr)}$$</div>
+    <div class="formula-block">$$\\text{Error medio} = ${currentTrueFn?fmtNum(actualMeanErr):'\\text{(sin f real)}'}$$</div>
+    <div class="formula-block">$$\\text{Error en nodos} \\approx ${maxNodeErr.toExponential(2)}$$</div>
+  </div>
+</div>
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px">
+  <div class="section-label" style="margin-bottom:8px">Fenómeno de Runge — Nodos de Chebyshev</div>
+  <p style="font-size:12px;color:var(--text2);line-height:1.7">Nodos equiespaciados pueden causar oscilaciones crecientes. Los <strong style="color:var(--gold)">nodos de Chebyshev</strong> minimizan $\\max|\\omega(x)|$:</p>
+  <div class="formula-block">$$x_k = \\frac{a+b}{2} + \\frac{b-a}{2}\\cos\\!\\left(\\frac{(2k+1)\\pi}{2(n+1)}\\right), \\quad k=0,\\ldots,n$$</div>
+  <div class="formula-block gold">$$\\max_{x\\in[a,b]}|\\omega_{n+1}(x)| \\leq \\frac{(b-a)^{n+1}}{2^n \\cdot (n+1)!}$$</div>
+</div>
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px">
+  <div class="section-label" style="margin-bottom:8px">Convergencia comparada</div>
+  <table class="error-table"><thead><tr><th>Método</th><th>Orden</th><th>Condición</th></tr></thead><tbody>
+  <tr><td>Lagrange / Newton (grado $n$)</td><td class="val">$\\mathcal{O}(h^{n+1})$</td><td class="bound">$f \\in C^{n+1}[a,b]$</td></tr>
+  <tr><td>Lineal por tramos</td><td class="val">$\\mathcal{O}(h^2)$</td><td class="bound">$f \\in C^2$</td></tr>
+  <tr><td>Spline cúbico natural</td><td class="val">$\\mathcal{O}(h^4)$</td><td class="bound">$f \\in C^4[a,b]$</td></tr>
+  </tbody></table>
+</div>
+</div>
+
+<div class="modal-section" id="etab-node">
+  <div class="section-label" style="margin-bottom:8px">Error local en cada nodo</div>
+  <table class="live-err-table"><thead><tr><th>$i$</th><th>$x_i$</th><th>$f(x_i)$</th><th>$P(x_i)$</th><th>$|\\varepsilon_i|$</th></tr></thead>
+  <tbody>${nodeErrors.map((e,i)=>`<tr><td>${i}</td><td>${fmtNum(e.x)}</td><td>${fmtNum(e.exact)}</td><td>${fmtNum(e.approx)}</td><td class="${e.err<1e-8?'good':e.err<1e-4?'medium':'bad'}">${e.err.toExponential(3)}</td></tr>`).join('')}</tbody></table>
+</div>
+
+<div class="modal-section" id="etab-formulas">
+<div class="error-grid">
+  <div class="error-card">
+    <h3>Error de Lagrange (forma general)</h3>
+    <div class="formula-block">$$E_n(x) = \\frac{f^{(n+1)}(\\xi)}{(n+1)!}\\prod_{i=0}^{n}(x-x_i), \\quad \\xi \\in [a,b]$$</div>
+  </div>
+  <div class="error-card">
+    <h3>Spline cúbico</h3>
+    <div class="formula-block">$$|f(x)-S(x)| \\leq \\frac{5}{384}\\,h^4\\,M_4$$</div>
+    <div class="note">$h$ = paso máximo, $M_4 = \\max|f''''|$</div>
+  </div>
+  <div class="error-card">
+    <h3>Lineal por tramos</h3>
+    <div class="formula-block">$$|f(x)-P_1(x)| \\leq \\frac{h^2}{8}\\,M_2, \\quad M_2=\\max|f''|$$</div>
+  </div>
+  <div class="error-card">
+    <h3>Newton (diferencias finitas)</h3>
+    <div class="formula-block">$$E_n(x) = \\frac{\\Delta^{n+1}f(x_0)}{(n+1)!}\\,\\omega(t)$$</div>
+    <div class="note">$t=(x-x_0)/h$, $\\;\\omega(t)=t(t-1)\\cdots(t-n)$</div>
+  </div>
+</div>
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:4px">
+  <div class="section-label" style="margin-bottom:8px">Parámetros actuales</div>
+  <table class="error-table"><thead><tr><th>Parámetro</th><th>Valor</th></tr></thead><tbody>
+  <tr><td>$n$ (grado)</td><td class="val">${n-1}</td></tr>
+  <tr><td>$h$ (paso medio)</td><td class="val">$${hL}$</td></tr>
+  <tr><td>$M_{n+1}$ estimado</td><td class="val">${maxDeriv.toExponential(3)}</td></tr>
+  <tr><td>Cota Lagrange</td><td class="bound">${lagBound.toExponential(3)}</td></tr>
+  <tr><td>$\\|error\\|_\\infty$ observado</td><td class="${actualMaxErr<lagBound*1.1?'good':'bad'}">${fmtNum(actualMaxErr)}</td></tr>
+  </tbody></table>
+</div>
+</div>`;
+  if(window.MathJax&&MathJax.typesetPromise) MathJax.typesetPromise([container]).catch(console.warn);
+}
+
+function switchErrTab(btn,id){
+  document.querySelectorAll('#errorAnalysisContent .modal-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#errorAnalysisContent .modal-section').forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');document.getElementById(id).classList.add('active');
+}
+
+// ─── APLICACIONES ───
+function buildAppsContent(){return`
+<div class="section-label" style="margin-bottom:12px">Aplicaciones de la interpolación en ciencia e ingeniería</div>
+<div class="app-grid">
+  <div class="app-card"><h4>Procesamiento de señales</h4><p>Reconstrucción de señales continuas desde muestras (Nyquist-Shannon). Los splines cúbicos se usan en síntesis de audio, MP3 y codificación de video para interpolar cuadros.</p><span class="tag">Spline</span><span class="tag">DSP</span></div>
+  <div class="app-card"><h4>Gráficos 3D / CAD</h4><p>Curvas de Bézier y B-splines son formas de interpolación/aproximación en tipografía vectorial, diseño CAD/CAM, animación 3D y trayectorias de robots.</p><span class="tag">Bézier</span><span class="tag">CAD</span></div>
+  <div class="app-card"><h4>Sensores / IoT</h4><p>Sensores de temperatura, presión y pH generan mediciones discretas. La interpolación permite estimar valores entre muestras y corregir no-linealidades.</p><span class="tag">Embedded</span><span class="tag">IoT</span></div>
+  <div class="app-card"><h4>Simulación CFD</h4><p>Solvers de Navier-Stokes usan interpolación polinomial de alto orden (FEM) para aproximar campos de velocidad y presión dentro de cada elemento de la malla.</p><span class="tag">FEM</span><span class="tag">CFD</span></div>
+  <div class="app-card"><h4>Finanzas cuantitativas</h4><p>Curvas de tasas de interés y superficies de volatilidad implícita se construyen interpolando datos de mercado con splines cúbicos o Akima.</p><span class="tag">Yield curve</span><span class="tag">QuantFin</span></div>
+  <div class="app-card"><h4>Visión computacional</h4><p>Zoom digital, rotación e interpolación de imágenes usan interpolación bicúbica. En MRI/CT se interpola la señal para reconstrucción de alta resolución.</p><span class="tag">OpenCV</span><span class="tag">MRI</span></div>
+</div>
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:4px">
+  <div class="section-label" style="margin-bottom:8px">Comparación de métodos</div>
+  <table class="error-table"><thead><tr><th>Aplicación</th><th>Método</th><th>Razón</th></tr></thead><tbody>
+  <tr><td>Datos suaves, pocos puntos</td><td class="val">Lagrange / Newton</td><td>Exacto en nodos</td></tr>
+  <tr><td>Tablas grandes (&gt;10 pts)</td><td class="val">Spline cúbico</td><td>Evita oscilaciones, $O(h^4)$</td></tr>
+  <tr><td>Tiempo real / hardware</td><td class="val">Lineal por tramos</td><td>$O(n)$ espacio, simple</td></tr>
+  <tr><td>Derivadas o integración</td><td class="val">Dif. divididas</td><td>Coeficientes explícitos</td></tr>
+  </tbody></table>
+</div>
+`;}
+
+// ─── REDES NEURONALES ───
+function buildNNContent(){return`
+<div class="modal-tabs">
+  <button class="modal-tab active" onclick="switchNNTab(this,'nn-theory')">Teoría</button>
+  <button class="modal-tab" onclick="switchNNTab(this,'nn-demo')">Demo Interactiva</button>
+  <button class="modal-tab" onclick="switchNNTab(this,'nn-apps')">Usos concretos</button>
+</div>
+<div class="modal-section active" id="nn-theory">
+<div class="nn-section">
+  <h2>Interpolación como base del aprendizaje supervisado</h2>
+  <p>Una red neuronal entrenada es un <em>aproximador universal de funciones</em> (Cybenko, 1989). Con suficientes neuronas, puede aproximar cualquier $f$ continua en norma $L^\\infty$ con error arbitrariamente pequeño — fundamentalmente un problema de <strong style="color:var(--accent)">interpolación de alta dimensión</strong>.</p>
+  <div class="formula-block" style="margin-bottom:14px">$$\\forall\\,\\varepsilon>0\\;\\exists\\,N\\in\\mathbb{N}:\\quad \\sup_{x\\in K}\\left|f(x) - \\sum_{j=1}^N c_j\\,\\sigma(w_j^\\top x + b_j)\\right| < \\varepsilon$$</div>
+  <div class="nn-grid">
+    <div class="nn-card"><div class="nn-icon">📊</div><h4>Generación de datos</h4><p>Simuladores usan interpolación para generar datasets sintéticos densos desde pocas mediciones reales vía Lagrange o splines.</p></div>
+    <div class="nn-card"><div class="nn-icon">⚡</div><h4>Inicialización de pesos</h4><p>La interpolación puede inicializar pesos cuando se conoce la función objetivo parcialmente, reduciendo epochs en transfer learning.</p></div>
+    <div class="nn-card"><div class="nn-icon">🔁</div><h4>PINNs</h4><p>Physics-Informed Neural Networks combinan pérdida de residuos de EDPs con errores de interpolación en nodos de colocación tipo Chebyshev.</p></div>
+    <div class="nn-card"><div class="nn-icon">🧮</div><h4>KAN (2024)</h4><p>Kolmogorov-Arnold Networks reemplazan multiplicaciones por splines B ajustables. Cada conexión es un spline — interpolación explícita en la arquitectura.</p></div>
+    <div class="nn-card"><div class="nn-icon">🎯</div><h4>Activaciones</h4><p>ReLU construye aproximaciones lineales por tramos. Redes profundas construyen aproximaciones jerárquicas similares a interpolación multi-escala.</p></div>
+    <div class="nn-card"><div class="nn-icon">📡</div><h4>Surrogate / Metamodelos</h4><p>Simulaciones costosas (CFD, FEM) se reemplazan por modelos sustitutos entrenados sobre puntos de interpolación (diseño de experimentos).</p></div>
+  </div>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px">
+    <div class="section-label" style="margin-bottom:8px">Tabla de analogías NN ↔ Interpolación</div>
+    <table class="error-table"><thead><tr><th>Concepto NN</th><th>Análogo numérico</th></tr></thead><tbody>
+    <tr><td>Datos de entrenamiento $(x_i, y_i)$</td><td class="val">Nodos $(x_i, f(x_i))$</td></tr>
+    <tr><td>Función hipótesis $h(x)$</td><td class="val">Polinomio $P_n(x)$</td></tr>
+    <tr><td>Pérdida MSE</td><td class="val">$\\|P - f\\|_2^2$</td></tr>
+    <tr><td>Overfitting</td><td class="val">Fenómeno de Runge</td></tr>
+    <tr><td>Regularización $L_2$</td><td class="val">Spline de suavizado</td></tr>
+    <tr><td>Capacidad (# parámetros)</td><td class="val">Grado $n$ del polinomio</td></tr>
+    </tbody></table>
+  </div>
+</div>
+</div>
+<div class="modal-section" id="nn-demo">
+  <div class="nn-demo-wrap">
+    <h4>Red ReLU vs Lagrange vs f(x) real</h4>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:10px">Ajustá las neuronas y observá cómo la red ReLU aproxima la función comparada con Lagrange.</p>
+    <div class="nn-controls">
+      <label>Neuronas:</label>
+      <input type="range" id="nnNeurons" min="2" max="28" value="8" oninput="updateNNDemo()">
+      <span class="nn-stat" id="nnNeuronCount">8</span>
+      <label style="margin-left:12px">Función:</label>
+      <select id="nnFnSel" onchange="updateNNDemo()">
+        <option value="sin">sin(2x)</option>
+        <option value="runge">1/(1+x²)</option>
+        <option value="step">sigmoide</option>
+        <option value="poly">x³−x</option>
+      </select>
+      <span class="nn-stat" id="nnErrStat" style="margin-left:12px"></span>
+    </div>
+    <canvas id="nnCanvas" height="220"></canvas>
+  </div>
+  <div style="font-size:11px;color:var(--text2);line-height:1.7;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px">
+    Analogy: con pocas neuronas → bias alto (subajuste); muchas neuronas + pocos datos → varianza alta (sobreajuste = Runge). El spline cúbico logra el balance óptimo: minimiza $\\int |S''(x)|^2 dx$ sujeto a interpolación exacta en nodos.
+  </div>
+</div>
+<div class="modal-section" id="nn-apps">
+<div class="nn-section">
+  <h2>Casos de uso concretos en IA/ML</h2>
+  <div class="nn-grid">
+    <div class="nn-card"><div class="nn-icon">🗺️</div><h4>Embedding interpolation</h4><p>Embeddings de palabras desconocidas se generan interpolando entre vectores de palabras vecinas. Permite zero-shot generalization en NLP.</p></div>
+    <div class="nn-card"><div class="nn-icon">🎬</div><h4>Video frame interpolation</h4><p>DAIN y FILM usan splines ópticos y redes que aprenden el "flujo de interpolación" entre fotogramas para slow-motion.</p></div>
+    <div class="nn-card"><div class="nn-icon">🧬</div><h4>AlphaFold</h4><p>Ángulos de torsión de proteínas se representan con splines a lo largo de la cadena. Las attention heads aprenden kernels similares a bases de Lagrange.</p></div>
+    <div class="nn-card"><div class="nn-icon">🚗</div><h4>Robótica / ROS</h4><p>Planificadores de movimiento usan splines cúbicos para interpolación de waypoints. Las políticas de control se definen sobre nodos en el espacio de estados.</p></div>
+    <div class="nn-card"><div class="nn-icon">📈</div><h4>Neural ODE</h4><p>Las Neural ODEs (Chen et al., 2018) parametrizan dinámicas continuas y usan solucionadores (Dormand-Prince) que internamente interpolan el campo vectorial.</p></div>
+    <div class="nn-card"><div class="nn-icon">🌍</div><h4>Climate AI</h4><p>FourCastNet y Pangu-Weather trabajan en mallas fijas. Para predecir en puntos arbitrarios se interpola la salida. Datos de entrenamiento incluyen interpolación spacio-temporal de ERA5.</p></div>
+  </div>
+</div>
+</div>
+`;}
+
+function switchNNTab(btn,id){
+  document.querySelectorAll('#nn-theory,#nn-demo,#nn-apps').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.modal-tabs .modal-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');document.getElementById(id).classList.add('active');
+  if(id==='nn-demo')setTimeout(updateNNDemo,30);
+  if(window.MathJax&&MathJax.typesetPromise)setTimeout(()=>MathJax.typesetPromise([document.getElementById(id)]).catch(console.warn),100);
+}
+
+// ─── NN DEMO ───
+function initNNDemo(){updateNNDemo();}
+function updateNNDemo(){
+  const nEl=document.getElementById('nnNeurons');if(!nEl)return;
+  const nNeurons=+nEl.value;document.getElementById('nnNeuronCount').textContent=nNeurons;
+  const fnSel=document.getElementById('nnFnSel').value;
+  const fn={sin:x=>Math.sin(x*2),runge:x=>1/(1+x*x),step:x=>1/(1+Math.exp(-5*x)),poly:x=>x*x*x-x}[fnSel];
+  const a=-3,b=3,nPts=8;const xs=[],ys=[];
+  for(let i=0;i<nPts;i++){xs.push(a+(b-a)*i/(nPts-1));ys.push(fn(xs[i]));}
+  const pts=xs.map((x,i)=>({x,y:ys[i]}));
+  const relu=x=>Math.max(0,x);
+  let s=nNeurons*137;const rng=()=>{s=((s*1664525+1013904223)>>>0);return s/0xffffffff*2-1;};
+  const W1=[],b1=[],W2=[],b2_=[0];
+  for(let i=0;i<nNeurons;i++){W1.push(rng()*2);b1.push(rng()*1.5);W2.push(rng());}
+  const A=xs.map(x=>W1.map((w,i)=>relu(w*x+b1[i])));
+  for(let iter=0;iter<2000;iter++){const lr=0.005;const dW2=Array(nNeurons).fill(0);let db2=0;for(let i=0;i<nPts;i++){const h=A[i];const pred=W2.reduce((s,w,j)=>s+w*h[j],0)+b2_[0];const e=pred-ys[i];for(let j=0;j<nNeurons;j++)dW2[j]+=e*h[j];db2+=e;}for(let j=0;j<nNeurons;j++)W2[j]-=lr*dW2[j]/nPts;b2_[0]-=lr*db2/nPts;}
+  const nnPredict=x=>{const h=W1.map((w,i)=>relu(w*x+b1[i]));return W2.reduce((s,w,j)=>s+w*h[j],0)+b2_[0];};
+  const lagPred=x=>lagrange(pts,x);
+  const cv=document.getElementById('nnCanvas');if(!cv)return;
+  const dpr=window.devicePixelRatio||1,W=cv.parentElement.clientWidth||700,H=220;
+  cv.style.width=W+'px';cv.width=W*dpr;cv.height=H*dpr;
+  const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  const pad={top:12,right:12,bottom:30,left:44};const cw=W-pad.left-pad.right,ch=H-pad.top-pad.bottom;
+  const NS=400;const allYs=[];
+  for(let i=0;i<=NS;i++){const x=a+(b-a)*i/NS;allYs.push(fn(x),nnPredict(x),lagPred(x));}
+  const valid=allYs.filter(v=>isFinite(v)&&!isNaN(v)&&Math.abs(v)<20);
+  let ymin=Math.min(...valid,Math.min(...ys)),ymax=Math.max(...valid,Math.max(...ys));
+  const ysp=ymax-ymin||1;ymin-=ysp*.1;ymax+=ysp*.1;
+  const toS=(x,y)=>({sx:pad.left+(x-a)/(b-a)*cw,sy:pad.top+(1-(y-ymin)/(ymax-ymin))*ch});
+  ctx.fillStyle='#181b22';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(37,41,50,.8)';ctx.lineWidth=1;
+  for(let i=0;i<=6;i++){const y=ymin+(ymax-ymin)*i/6;const{sy}=toS(0,y);ctx.beginPath();ctx.moveTo(pad.left,sy);ctx.lineTo(W-pad.right,sy);ctx.stroke();}
+  const drawL=(fn2,color,dash=[])=>{ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.setLineDash(dash);ctx.beginPath();let first=true;for(let i=0;i<=NS;i++){const x=a+(b-a)*i/NS;const y=fn2(x);if(!isFinite(y)||isNaN(y)||Math.abs(y)>30){first=true;continue;}const{sx,sy}=toS(x,y);if(first){ctx.moveTo(sx,sy);first=false;}else ctx.lineTo(sx,sy);}ctx.stroke();ctx.setLineDash([]);};
+  drawL(fn,'#69f0ae',[6,3]);drawL(lagPred,'#ce93d8',[3,3]);drawL(nnPredict,'#ffab40',[]);
+  pts.forEach(p=>{const{sx,sy}=toS(p.x,p.y);ctx.beginPath();ctx.arc(sx,sy,4,0,Math.PI*2);ctx.fillStyle='#ffd54f';ctx.fill();});
+  ctx.font='9px IBM Plex Mono';ctx.fillStyle='#69f0ae';ctx.fillText('— f(x) real',pad.left+4,H-pad.bottom+12);ctx.fillStyle='#ffab40';ctx.fillText('— ReLU NN',pad.left+90,H-pad.bottom+12);ctx.fillStyle='#ce93d8';ctx.fillText('--- Lagrange',pad.left+180,H-pad.bottom+12);ctx.fillStyle='#ffd54f';ctx.fillText('● nodos',pad.left+280,H-pad.bottom+12);
+  let nnErr=0,lagErr=0;for(let i=0;i<=NS;i++){const x=a+(b-a)*i/NS;nnErr+=Math.abs(nnPredict(x)-fn(x));lagErr+=Math.abs(lagPred(x)-fn(x));}
+  document.getElementById('nnErrStat').textContent=`NN: ${(nnErr/NS).toExponential(2)} | Lag: ${(lagErr/NS).toExponential(2)}`;
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>

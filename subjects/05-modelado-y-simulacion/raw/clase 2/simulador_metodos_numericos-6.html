@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Raíces de Ecuaciones no Lineales — UADE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+};
+</script>
+<script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js"></script>
+<style>
+  :root{
+    --desk:#0F1114;
+    --paper:#1B1E24;
+    --paper-tint:#20242C;
+    --ink:#ECEDEF;
+    --ink-soft:#A6ABB3;
+    --ink-faint:#74787F;
+    --rule:rgba(236,237,239,0.10);
+    --rule-strong:rgba(236,237,239,0.24);
+    --teal:#2E8B84;
+    --teal-soft:#5FA39D;
+    --teal-wash:rgba(46,139,132,0.14);
+    --navy:#5B9BD9;
+    --green:#4FAE7C;
+    --red:#E0616B;
+    --font-display:'Source Serif 4', Georgia, serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--desk);
+    color:var(--ink);
+    font-family:var(--font-body);
+    min-height:100vh;
+    padding:36px 20px 60px;
+  }
+  a{color:var(--navy);}
+  :focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+
+  .sheet{
+    max-width:1180px;
+    margin:0 auto;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    box-shadow:0 1px 0 rgba(236,237,239,0.04) inset, 0 30px 80px rgba(0,0,0,0.55);
+  }
+
+  /* ---------- HEADER ---------- */
+  header.titlepage{ padding:38px 46px 26px; }
+  .eyebrow{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--teal);
+  }
+  h1{
+    font-family:var(--font-display); font-weight:700;
+    font-size:clamp(30px, 4vw, 46px); line-height:1.12; margin:10px 0 8px; max-width:800px;
+  }
+  .byline{ font-family:var(--font-body); font-size:15px; color:var(--ink-soft); margin:0 0 20px; }
+  .rule-double{margin:0 0 20px;}
+  .rule-double .thick{height:2px; background:var(--ink); margin-bottom:3px;}
+  .rule-double .thin{height:1px; background:var(--ink);}
+  .abstract{
+    font-family:var(--font-display); font-style:italic; font-size:16.5px; line-height:1.65;
+    color:var(--ink-soft); max-width:760px; margin:0;
+  }
+  .abstract strong{
+    font-style:normal; font-weight:700; color:var(--ink); font-family:var(--font-body);
+    font-size:12.5px; letter-spacing:0.08em; text-transform:uppercase; margin-right:8px;
+  }
+
+  /* ---------- SECTION NAV ---------- */
+  nav.toc{
+    display:flex; gap:2px; padding:0 46px;
+    border-top:1px solid var(--rule-strong); border-bottom:1px solid var(--rule-strong);
+    flex-wrap:wrap;
+  }
+  nav.toc button{
+    font-family:var(--font-display); font-size:17px; background:transparent; color:var(--ink-faint);
+    border:none; border-bottom:2px solid transparent; padding:14px 22px 12px; cursor:pointer;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  nav.toc button .sec-num{
+    font-family:var(--font-mono); font-size:13px; color:var(--teal-soft); margin-right:8px;
+  }
+  nav.toc button:hover{color:var(--ink);}
+  nav.toc button.active{ color:var(--ink); border-bottom-color:var(--teal); }
+  nav.toc button.active .sec-num{ color:var(--teal); }
+
+  /* ---------- WORKSPACE GRID ---------- */
+  main.workspace{ display:grid; grid-template-columns:320px 1fr; gap:0; }
+  @media (max-width:900px){ main.workspace{grid-template-columns:1fr;} }
+
+  .panel-input{ border-right:1px solid var(--rule-strong); padding:28px 30px 34px; }
+  .panel-heading{
+    font-family:var(--font-display); font-size:15px; font-weight:600; letter-spacing:0.04em;
+    text-transform:uppercase; color:var(--ink); margin:0 0 18px; padding-bottom:9px;
+    border-bottom:1px solid var(--rule-strong);
+  }
+  .panel-input .field-group{margin-bottom:16px;}
+  .panel-input label{
+    display:block; font-family:var(--font-mono); font-size:13px; letter-spacing:0.09em;
+    text-transform:uppercase; color:var(--teal); margin-bottom:6px;
+  }
+  .panel-input input[type=text]{
+    width:100%; background:var(--paper-tint); border:1px solid var(--rule-strong); color:var(--ink);
+    font-family:var(--font-mono); font-size:16.5px; padding:9px 10px;
+  }
+  .panel-input input:focus{ border-color:var(--teal); background:var(--paper); }
+  .row-2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+  .expr-preview{
+    min-height:34px; margin-top:-6px; margin-bottom:14px; padding:7px 10px;
+    border:1px solid var(--rule); background:var(--paper-tint);
+    font-family:var(--font-display); font-size:15px; color:var(--ink); text-align:center; line-height:1.4;
+  }
+
+  .hint{ font-family:var(--font-body); font-size:13px; color:var(--ink-faint); margin-top:5px; line-height:1.5; }
+  .examples{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+  .chip{
+    font-family:var(--font-mono); font-size:12px; background:var(--paper);
+    border:1px solid var(--navy); color:var(--navy); padding:4px 8px; cursor:pointer;
+  }
+  .chip:hover{background:rgba(91,155,217,0.14);}
+
+  /* ---------- KEYPAD ---------- */
+  .keypad{
+    margin-top:0; max-height:0; opacity:0; overflow:hidden; border:1px solid transparent;
+    background:var(--paper-tint);
+    transition:max-height .28s ease, opacity .2s ease, margin-top .28s ease, border-color .2s ease;
+  }
+  .keypad.kb-open{ margin-top:18px; max-height:420px; opacity:1; border-color:var(--rule-strong); }
+  @media (prefers-reduced-motion:reduce){ .keypad{transition:none;} }
+  .keypad-head{
+    display:flex; justify-content:space-between; align-items:center; padding:8px 10px;
+    border-bottom:1px solid var(--rule-strong); font-family:var(--font-mono); font-size:12px;
+    letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-faint);
+  }
+  .keypad-head .target{ color:var(--teal); font-weight:600; }
+  .keypad-body{padding:8px;}
+  .keypad-row{display:flex; flex-wrap:wrap; gap:5px; margin-bottom:5px;}
+  .keypad-row:last-child{margin-bottom:0;}
+  .keypad.kb-numeric .row-expr-only{display:none;}
+  .keypad-row .row-tag{
+    font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); letter-spacing:0.08em;
+    width:100%; margin:2px 0 1px; text-transform:uppercase;
+  }
+  .kbtn{
+    font-family:var(--font-mono); font-size:15px; color:var(--ink); background:var(--paper);
+    border:1px solid var(--rule-strong); min-width:38px; height:36px; padding:0 8px; cursor:pointer;
+    transition:background .1s ease, transform .06s ease, border-color .1s ease;
+  }
+  .kbtn:hover{background:var(--teal-wash); border-color:var(--teal-soft);}
+  .kbtn:active{transform:translateY(1px);}
+  .kbtn.wide{min-width:52px;}
+  .kbtn.op{color:var(--navy);}
+  .kbtn.const{color:var(--teal);}
+  .kbtn.edit{color:var(--red); border-color:rgba(224,97,107,0.4);}
+  .kbtn.edit:hover{background:rgba(224,97,107,0.08); border-color:var(--red);}
+
+  button.run{
+    width:100%; margin-top:20px; background:var(--teal); color:var(--paper); border:none;
+    font-family:var(--font-body); font-weight:600; font-size:14.5px; letter-spacing:0.06em;
+    padding:13px 14px; cursor:pointer; text-transform:uppercase;
+    transition:background .15s ease, transform .08s ease;
+  }
+  button.run:hover{background:#256F69;}
+  button.run:active{transform:translateY(1px);}
+
+  .error-msg{
+    margin-top:14px; border-left:3px solid var(--red); background:rgba(224,97,107,0.08);
+    color:#f0b8bd; font-family:var(--font-mono); font-size:13px; padding:10px 12px;
+    line-height:1.55; display:none;
+  }
+  .error-msg.show{display:block;}
+
+  /* ---------- VISUAL PANEL ---------- */
+  .panel-visual{padding:28px 32px 10px;}
+
+  .eq-box{
+    display:flex; align-items:center; justify-content:center; position:relative;
+    border-top:1px solid var(--rule-strong); border-bottom:1px solid var(--rule-strong);
+    padding:22px 10px; margin-bottom:20px; min-height:56px;
+  }
+  .eq-formula{ font-size:19px; color:var(--ink); }
+  .eq-number{
+    position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    font-family:var(--font-mono); font-size:14px; color:var(--ink-faint);
+  }
+
+  /* voice assistant */
+  .voice-assistant{
+    border:1px solid var(--rule-strong); background:var(--paper-tint); padding:18px 20px; margin-bottom:24px;
+  }
+  .va-head{ display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:6px 16px; margin-bottom:10px; }
+  .va-head .va-title{ font-family:var(--font-display); font-size:15px; font-weight:600; color:var(--ink); }
+  .va-head .va-title::before{ content:'🔊'; margin-right:8px; font-size:13px; }
+  .va-voice{ font-family:var(--font-mono); font-size:12px; color:var(--teal); }
+  .va-text{ font-family:var(--font-body); font-size:14.5px; line-height:1.65; color:var(--ink-soft); margin:0 0 14px; }
+  .va-controls{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .va-btn{
+    font-family:var(--font-body); font-weight:500; font-size:13px; background:var(--paper); color:var(--ink);
+    border:1px solid var(--rule-strong); padding:8px 14px; cursor:pointer;
+    transition:background .12s ease, border-color .12s ease;
+  }
+  .va-btn:hover{background:var(--teal-wash); border-color:var(--teal-soft);}
+  .va-btn.primary{background:var(--teal); color:var(--paper); border-color:var(--teal);}
+  .va-btn.primary:hover{background:#256F69;}
+  .va-btn:disabled{opacity:0.4; cursor:not-allowed;}
+  .va-select{
+    font-family:var(--font-mono); font-size:12px; background:var(--paper); color:var(--ink);
+    border:1px solid var(--rule-strong); padding:7px 8px; max-width:100%; flex:1 1 220px;
+  }
+  .va-note{ font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); margin-top:10px; line-height:1.6; }
+
+  .fig-eyebrow{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--teal); margin-bottom:8px;
+  }
+  .chart-card{ border:1px solid var(--rule-strong); background:var(--paper); padding:6px; }
+  canvas{display:block; width:100%; height:320px;}
+  .fig-caption{
+    font-family:var(--font-display); font-style:italic; font-size:14px; color:var(--ink-soft);
+    text-align:center; padding:12px 20px 0; line-height:1.5;
+  }
+  .fig-caption b{font-style:normal; font-weight:600; color:var(--ink);}
+  .legend{ display:flex; gap:18px; flex-wrap:wrap; padding:8px 8px 4px; font-family:var(--font-mono); font-size:12px; color:var(--ink-faint); }
+  .legend .dot{display:inline-block; width:9px; height:9px; margin-right:6px; vertical-align:middle;}
+
+  /* table */
+  .table-block{margin-top:36px;}
+  .table-caption{ font-family:var(--font-display); font-style:italic; font-size:14px; color:var(--ink-soft); margin-bottom:10px; }
+  .table-caption b{font-style:normal; font-weight:600; color:var(--ink);}
+  .table-head-bar{ display:flex; justify-content:flex-end; font-family:var(--font-mono); font-size:12px; color:var(--ink-faint); margin-bottom:4px; }
+  .table-wrap{ border-top:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink); max-height:280px; overflow-y:auto; }
+  table{width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:14.5px;}
+  thead th{
+    position:sticky; top:0; background:var(--paper); color:var(--ink); text-align:right; padding:9px 14px;
+    font-weight:600; letter-spacing:0.02em; border-bottom:1px solid var(--ink); white-space:nowrap;
+  }
+  thead th:first-child, tbody td:first-child{text-align:left;}
+  tbody td{
+    padding:7px 14px; text-align:right; border-bottom:1px solid var(--rule); color:var(--ink-soft);
+    opacity:0; animation:rowin .25s ease forwards;
+  }
+  @media (prefers-reduced-motion:reduce){ tbody td{animation:none; opacity:1;} }
+  @keyframes rowin{ to{opacity:1;} }
+  tbody tr.final td{color:var(--green); font-weight:600;}
+  tbody tr:hover td{background:var(--paper-tint);}
+
+  /* results */
+  .results-block{ margin:40px 32px 8px; padding-top:22px; border-top:1.5px solid var(--ink); }
+  .results-title{ font-family:var(--font-display); font-size:15px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:14px; }
+  .result-row{ display:flex; align-items:baseline; gap:8px; padding:5px 0; font-family:var(--font-body); font-size:16px; }
+  .result-row .rlabel{color:var(--ink-soft); white-space:nowrap;}
+  .result-row .rleader{flex:1; border-bottom:1px dotted var(--rule-strong); margin-bottom:4px;}
+  .result-row .rvalue{ font-family:var(--font-mono); font-size:16px; font-weight:600; color:var(--ink); white-space:nowrap; }
+  .result-row .rvalue.ok{color:var(--green);}
+  .result-row .rvalue.bad{color:var(--red);}
+
+  footer.citation{
+    margin:30px 32px 0; padding:16px 0 34px; border-top:1px solid var(--rule); text-align:center;
+    font-family:var(--font-mono); font-size:12px; letter-spacing:0.03em; color:var(--ink-faint); line-height:1.8;
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <header class="titlepage">
+    <div class="eyebrow">Universidad Argentina de la Empresa — Ingeniería</div>
+    <h1>Simulador de Raíces de Ecuaciones no Lineales</h1>
+    <p class="byline">Cátedra de Modelado y Simulación · Docente: Ing. Omar Cáceres · UADE</p>
+    <div class="rule-double"><div class="thick"></div><div class="thin"></div></div>
+    <p class="abstract"><strong>Resumen</strong>Simulador interactivo que integra los cuatro métodos fundamentales de búsqueda de raíces: Bisección, Punto Fijo, Newton-Raphson y la aceleración de Aitken. Permite definir la función y los parámetros de iteración —incluyendo valores negativos—, y observar la convergencia mediante gráficos, tablas de iteraciones y reproducción paso a paso. Los ejemplos precargados en cada pestaña corresponden a ejercicios propuestos en la guía de la cátedra <i>Fundamentos de Modelado y Simulación</i> (Ing. Omar J. Cáceres).</p>
+  </header>
+
+  <nav class="toc" id="tabs">
+    <button class="active" data-method="biseccion"><span class="sec-num">§1</span>Bisección</button>
+    <button data-method="puntofijo"><span class="sec-num">§2</span>Punto Fijo</button>
+    <button data-method="newton"><span class="sec-num">§3</span>Newton-Raphson</button>
+    <button data-method="aitken"><span class="sec-num">§4</span>Aitken (Δ²)</button>
+  </nav>
+
+  <main class="workspace">
+    <section class="panel-input">
+      <div class="panel-heading">Parámetros de entrada</div>
+
+      <!-- BISECCION -->
+      <div class="method-form" id="form-biseccion">
+        <div class="field-group">
+          <label for="b-f">f(x) =</label>
+          <input type="text" id="b-f" value="x^3 - x - 2">
+        </div>
+        <div class="expr-preview" id="b-f-preview"></div>
+        <div class="row-2">
+          <div class="field-group">
+            <label for="b-a">a</label>
+            <input type="text" inputmode="decimal" id="b-a" value="1">
+          </div>
+          <div class="field-group">
+            <label for="b-b">b</label>
+            <input type="text" inputmode="decimal" id="b-b" value="2">
+          </div>
+        </div>
+        <div class="row-2">
+          <div class="field-group">
+            <label for="b-tol">Tolerancia</label>
+            <input type="text" inputmode="decimal" id="b-tol" value="0.0001">
+          </div>
+          <div class="field-group">
+            <label for="b-max">Iter. máx.</label>
+            <input type="text" inputmode="decimal" id="b-max" value="50">
+          </div>
+        </div>
+        <div class="hint">Requiere f(a)·f(b) &lt; 0. Usar ^ para potencias, * para producto. a y b admiten valores negativos.</div>
+        <div class="examples">
+          <span class="chip" title="Guía, Búsqueda binaria, ejercicio 2" data-fill="b|3*(x+1)*(x-1/2)*(x-1)|-1.25|2.5">Ej.2: 3(x+1)(x−½)(x−1)</span>
+          <span class="chip" title="Guía, Búsqueda binaria, ejercicio 3a" data-fill="b|sqrt(x) - cos(x)|0|1">Ej.3a: √x−cos(x)</span>
+          <span class="chip" title="Guía, Búsqueda binaria, ejercicio 3e" data-fill="b|x*cos(x) - 2*x^2 + 3*x - 1|0.2|0.3">Ej.3e: x·cos(x)−2x²+3x−1</span>
+          <span class="chip" title="Guía, Búsqueda binaria, ejercicio 4a" data-fill="b|x^4 - 2*x^3 - 4*x^2 + 4*x + 4|-2|-1">Ej.4a: polinomio, [−2,−1]</span>
+          <span class="chip" title="Guía, Búsqueda binaria, ejercicio 4c" data-fill="b|x^4 - 2*x^3 - 4*x^2 + 4*x + 4|2|3">Ej.4c: polinomio, [2,3]</span>
+        </div>
+      </div>
+
+      <!-- PUNTO FIJO -->
+      <div class="method-form" id="form-puntofijo" style="display:none;">
+        <div class="field-group">
+          <label for="p-g">g(x) =</label>
+          <input type="text" id="p-g" value="cbrt(x + 2)">
+        </div>
+        <div class="expr-preview" id="p-g-preview"></div>
+        <div class="field-group">
+          <label for="p-x0">x₀</label>
+          <input type="text" inputmode="decimal" id="p-x0" value="1.5">
+        </div>
+        <div class="row-2">
+          <div class="field-group">
+            <label for="p-tol">Tolerancia</label>
+            <input type="text" inputmode="decimal" id="p-tol" value="0.0001">
+          </div>
+          <div class="field-group">
+            <label for="p-max">Iter. máx.</label>
+            <input type="text" inputmode="decimal" id="p-max" value="50">
+          </div>
+        </div>
+        <div class="hint">x = g(x) debe converger cerca de x₀ (|g'(x)| &lt; 1 ideal). x₀ admite valores negativos.</div>
+        <div class="examples">
+          <span class="chip" title="Guía, Punto fijo, ejercicio 1: f(x)=2e^(x²)−5x" data-fill="p|(2/5)*exp(x^2)|0">Ej.1: g=(2/5)e^(x²)</span>
+          <span class="chip" title="Guía, Punto fijo, ejercicio 2: f(x)=cos(x)" data-fill="p|cos(x)|1">Ej.2: g=cos(x)</span>
+          <span class="chip" title="Guía, Punto fijo, ejercicio 3: f(x)=e^(−x)−x" data-fill="p|exp(-x)|0">Ej.3: g=e^(−x)</span>
+          <span class="chip" title="Guía, Punto fijo, ejercicio 4: f(x)=x³−x−1" data-fill="p|cbrt(x+1)|1">Ej.4: g=∛(x+1)</span>
+          <span class="chip" title="Guía, Punto fijo, ejercicio 5" data-fill="p|pi + 0.5*sin(x/2)|0">Ej.5: g=π+0.5sin(x/2)</span>
+        </div>
+      </div>
+
+      <!-- NEWTON -->
+      <div class="method-form" id="form-newton" style="display:none;">
+        <div class="field-group">
+          <label for="n-f">f(x) =</label>
+          <input type="text" id="n-f" value="x^3 - x - 2">
+        </div>
+        <div class="expr-preview" id="n-f-preview"></div>
+        <div class="field-group">
+          <label for="n-x0">x₀</label>
+          <input type="text" inputmode="decimal" id="n-x0" value="1.5">
+        </div>
+        <div class="row-2">
+          <div class="field-group">
+            <label for="n-tol">Tolerancia</label>
+            <input type="text" inputmode="decimal" id="n-tol" value="0.0001">
+          </div>
+          <div class="field-group">
+            <label for="n-max">Iter. máx.</label>
+            <input type="text" inputmode="decimal" id="n-max" value="50">
+          </div>
+        </div>
+        <div class="hint">f'(x) se calcula numéricamente (diferencia central). x₀ admite valores negativos.</div>
+        <div class="examples">
+          <span class="chip" title="Guía, Newton-Raphson, ejercicio 1 (raíz doble)" data-fill="n|(x-1)^2|0">Ej.1: (x−1)², x₀=0</span>
+          <span class="chip" title="Guía, Newton-Raphson, ejercicio 2" data-fill="n|x^3 - 2*x - 5|1.5">Ej.2: x³−2x−5</span>
+          <span class="chip" title="Guía, Newton-Raphson, ejercicio 3" data-fill="n|x^5 - x - 1|1">Ej.3: x⁵−x−1</span>
+          <span class="chip" title="Guía, Newton-Raphson, ejercicio 5" data-fill="n|exp(x) + x^2 - 4|0.5">Ej.5: eˣ+x²−4</span>
+          <span class="chip" title="Guía, Newton-Raphson, ejercicio 7 (raíz = e)" data-fill="n|ln(x) - 1|2">Ej.7: ln(x)−1</span>
+          <span class="chip" title="Guía, Newton-Raphson, ejercicio 9" data-fill="n|x^3 - 2*x + 1|-1.5">Ej.9: x³−2x+1, x₀=−1.5</span>
+        </div>
+      </div>
+
+      <!-- AITKEN -->
+      <div class="method-form" id="form-aitken" style="display:none;">
+        <div class="field-group">
+          <label for="ai-g">g(x) =</label>
+          <input type="text" id="ai-g" value="cbrt(x + 2)">
+        </div>
+        <div class="expr-preview" id="ai-g-preview"></div>
+        <div class="field-group">
+          <label for="ai-x0">x₀</label>
+          <input type="text" inputmode="decimal" id="ai-x0" value="1.5">
+        </div>
+        <div class="row-2">
+          <div class="field-group">
+            <label for="ai-tol">Tolerancia</label>
+            <input type="text" inputmode="decimal" id="ai-tol" value="0.0001">
+          </div>
+          <div class="field-group">
+            <label for="ai-max">Iter. máx.</label>
+            <input type="text" inputmode="decimal" id="ai-max" value="50">
+          </div>
+        </div>
+        <div class="hint">Acelera x = g(x) con la fórmula Δ² de Aitken, aplicada sobre cada terna (xₙ, xₙ₊₁, xₙ₊₂).</div>
+        <div class="examples">
+          <span class="chip" title="Guía, Aitken, ejercicio 1: f(x)=(π/2)x²−x−2" data-fill="ai|sqrt((2/pi)*(x+2))|1.4">Ej.1: g=√((2/π)(x+2))</span>
+          <span class="chip" title="Guía, Aitken, ejercicio 2: f(x)=cos(x)−x" data-fill="ai|cos(x)|0.5">Ej.2: g=cos(x)</span>
+          <span class="chip" title="Guía, Aitken, ejercicio 3" data-fill="ai|cbrt(3*x^2 - 4*x + 1)|0.3">Ej.3: g=∛(3x²−4x+1)</span>
+          <span class="chip" title="Guía, Aitken, ejercicio 6" data-fill="ai|ln(x+1)|0.5">Ej.6: g=ln(x+1)</span>
+          <span class="chip" title="Guía, Aitken, ejercicio 7" data-fill="ai|1 - x^3|0.5">Ej.7: g=1−x³</span>
+          <span class="chip" title="Guía, Aitken, ejercicio 9" data-fill="ai|(sin(x)+5)/x^2|2">Ej.9: g=(sin(x)+5)/x²</span>
+        </div>
+      </div>
+
+      <div class="keypad" id="keypad">
+        <div class="keypad-head">
+          <span>Teclado inteligente</span>
+          <span>insertar en: <span class="target" id="kbTarget">f(x)</span></span>
+        </div>
+        <div class="keypad-body">
+          <div class="keypad-row row-expr-only">
+            <span class="row-tag">Funciones</span>
+            <button type="button" class="kbtn" data-b="sin(" data-a=")">sin</button>
+            <button type="button" class="kbtn" data-b="cos(" data-a=")">cos</button>
+            <button type="button" class="kbtn" data-b="tan(" data-a=")">tan</button>
+            <button type="button" class="kbtn" data-b="sqrt(" data-a=")">√</button>
+            <button type="button" class="kbtn" data-b="cbrt(" data-a=")">∛</button>
+            <button type="button" class="kbtn" data-b="ln(" data-a=")">ln</button>
+            <button type="button" class="kbtn" data-b="log(" data-a=")">log</button>
+            <button type="button" class="kbtn" data-b="exp(" data-a=")">exp</button>
+            <button type="button" class="kbtn" data-b="abs(" data-a=")">abs</button>
+          </div>
+          <div class="keypad-row row-expr-only">
+            <span class="row-tag">Operadores</span>
+            <button type="button" class="kbtn op" data-b="(" data-a="">(</button>
+            <button type="button" class="kbtn op" data-b=")" data-a="">)</button>
+            <button type="button" class="kbtn op" data-b="^" data-a="">^</button>
+            <button type="button" class="kbtn op" data-b="+" data-a="">+</button>
+            <button type="button" class="kbtn op" data-b="*" data-a="">×</button>
+            <button type="button" class="kbtn op" data-b="/" data-a="">÷</button>
+          </div>
+          <div class="keypad-row row-expr-only">
+            <span class="row-tag">Constantes</span>
+            <button type="button" class="kbtn const" data-b="x" data-a="">x</button>
+            <button type="button" class="kbtn const" data-b="pi" data-a="">π</button>
+            <button type="button" class="kbtn const" data-b="e" data-a="">e</button>
+          </div>
+          <div class="keypad-row">
+            <span class="row-tag">Números</span>
+            <button type="button" class="kbtn op" data-b="-" data-a="">−</button>
+            <button type="button" class="kbtn" data-b="7" data-a="">7</button>
+            <button type="button" class="kbtn" data-b="8" data-a="">8</button>
+            <button type="button" class="kbtn" data-b="9" data-a="">9</button>
+            <button type="button" class="kbtn" data-b="4" data-a="">4</button>
+            <button type="button" class="kbtn" data-b="5" data-a="">5</button>
+            <button type="button" class="kbtn" data-b="6" data-a="">6</button>
+            <button type="button" class="kbtn" data-b="1" data-a="">1</button>
+            <button type="button" class="kbtn" data-b="2" data-a="">2</button>
+            <button type="button" class="kbtn" data-b="3" data-a="">3</button>
+            <button type="button" class="kbtn" data-b="0" data-a="">0</button>
+            <button type="button" class="kbtn" data-b="." data-a="">.</button>
+            <button type="button" class="kbtn wide edit" id="kbBack">⌫</button>
+            <button type="button" class="kbtn wide edit" id="kbClear">C</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="run" id="runBtn">Calcular</button>
+      <div class="error-msg" id="errorMsg"></div>
+    </section>
+
+    <section class="panel-visual">
+
+      <div class="eq-box">
+        <div class="eq-formula" id="eqFormula">\[ c_n = \dfrac{a_n+b_n}{2} \]</div>
+        <div class="eq-number" id="eqNumber">(1)</div>
+      </div>
+
+      <div class="voice-assistant">
+        <div class="va-head">
+          <span class="va-title">Asistente teórico de voz</span>
+          <span class="va-voice" id="vaVoiceLabel">Buscando voces del sistema…</span>
+        </div>
+        <p class="va-text" id="vaText"></p>
+        <div class="va-controls">
+          <button type="button" class="va-btn primary" id="vaPlay">▶ Reproducir</button>
+          <button type="button" class="va-btn" id="vaPause">⏸ Pausar</button>
+          <button type="button" class="va-btn" id="vaStop">⏹ Detener</button>
+          <select class="va-select" id="vaVoiceSelect"></select>
+        </div>
+        <div class="va-note">Usa la síntesis de voz local del navegador (Web Speech API), sin conexión a servidores externos. Si el equipo tiene instalada la voz "Microsoft Jorge — Español (Bolivia)", se selecciona automáticamente; si no está disponible, se elige la mejor voz en español instalada localmente.</div>
+      </div>
+
+      <div class="fig-eyebrow">Figura 1</div>
+      <div class="chart-card">
+        <canvas id="chart" width="1000" height="320"></canvas>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="fig-caption" id="figCaption"><b>Figura 1.</b> Trayectoria de convergencia — método de Bisección.</div>
+
+      <div class="table-block">
+        <div class="table-caption" id="tableCaption"><b>Tabla 1.</b> Registro de iteraciones — método de Bisección.</div>
+        <div class="table-head-bar"><span id="tableCount">0 filas</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead id="theadRow"></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="results-block">
+    <div class="results-title">Síntesis de resultados</div>
+    <div class="result-row"><span class="rlabel">Raíz aproximada</span><span class="rleader"></span><span class="rvalue" id="tbRoot">—</span></div>
+    <div class="result-row"><span class="rlabel">Iteraciones realizadas</span><span class="rleader"></span><span class="rvalue" id="tbIter">—</span></div>
+    <div class="result-row"><span class="rlabel">Error final</span><span class="rleader"></span><span class="rvalue" id="tbErr">—</span></div>
+    <div class="result-row"><span class="rlabel">f(raíz)</span><span class="rleader"></span><span class="rvalue" id="tbFroot">—</span></div>
+    <div class="result-row"><span class="rlabel">Estado de convergencia</span><span class="rleader"></span><span class="rvalue" id="tbStatus">—</span></div>
+  </div>
+
+  <footer class="citation">
+    Fuente: elaboración propia — Simulador desarrollado para la cátedra de Modelado y Simulación · Ing. Omar Cáceres · UADE
+  </footer>
+
+</div>
+
+<script>
+/* =========================================================
+   PARSER / EVALUADOR DE EXPRESIONES MATEMÁTICAS
+   ========================================================= */
+function tokenize(src){
+  const tokens = [];
+  let i = 0;
+  const isDigit = c => c >= '0' && c <= '9';
+  const isAlpha = c => /[a-zA-Z_]/.test(c);
+  while(i < src.length){
+    const c = src[i];
+    if(c === ' ' || c === '\t'){ i++; continue; }
+    if(isDigit(c) || (c === '.' && isDigit(src[i+1]))){
+      let start = i;
+      while(i < src.length && (isDigit(src[i]) || src[i] === '.')) i++;
+      if(src[i] === 'e' || src[i] === 'E'){
+        i++;
+        if(src[i] === '+' || src[i] === '-') i++;
+        while(i < src.length && isDigit(src[i])) i++;
+      }
+      tokens.push({type:'num', value: parseFloat(src.slice(start,i))});
+      continue;
+    }
+    if(isAlpha(c)){
+      let start = i;
+      while(i < src.length && /[a-zA-Z0-9_]/.test(src[i])) i++;
+      tokens.push({type:'ident', value: src.slice(start,i)});
+      continue;
+    }
+    if('+-*/^(),'.includes(c)){
+      tokens.push({type:'op', value:c});
+      i++;
+      continue;
+    }
+    throw new Error('Carácter no reconocido: "' + c + '"');
+  }
+  return tokens;
+}
+
+const FUNCS = {
+  sin: Math.sin, cos: Math.cos, tan: Math.tan,
+  asin: Math.asin, acos: Math.acos, atan: Math.atan,
+  exp: Math.exp, sqrt: Math.sqrt, cbrt: Math.cbrt,
+  abs: Math.abs, log: Math.log10, ln: Math.log,
+  log2: Math.log2, sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh
+};
+const CONSTS = { pi: Math.PI, e: Math.E };
+
+function parseExpr(src){
+  const tokens = tokenize(src);
+  let pos = 0;
+  const peek = () => tokens[pos];
+  const next = () => tokens[pos++];
+
+  function parseExpression(){
+    let node = parseTerm();
+    while(peek() && peek().type === 'op' && (peek().value === '+' || peek().value === '-')){
+      const op = next().value;
+      const right = parseTerm();
+      node = {type:'bin', op, left:node, right};
+    }
+    return node;
+  }
+  function parseTerm(){
+    let node = parsePower();
+    while(peek() && peek().type === 'op' && (peek().value === '*' || peek().value === '/')){
+      const op = next().value;
+      const right = parsePower();
+      node = {type:'bin', op, left:node, right};
+    }
+    return node;
+  }
+  function parsePower(){
+    let node = parseUnary();
+    if(peek() && peek().type === 'op' && peek().value === '^'){
+      next();
+      const right = parsePower();
+      node = {type:'bin', op:'^', left:node, right};
+    }
+    return node;
+  }
+  function parseUnary(){
+    if(peek() && peek().type === 'op' && peek().value === '-'){
+      next();
+      return {type:'neg', arg: parsePower()};
+    }
+    return parsePrimary();
+  }
+  function parsePrimary(){
+    const t = peek();
+    if(!t) throw new Error('Expresión incompleta.');
+    if(t.type === 'num'){ next(); return {type:'num', value:t.value}; }
+    if(t.type === 'op' && t.value === '('){
+      next();
+      const node = parseExpression();
+      if(!peek() || peek().value !== ')') throw new Error('Falta un paréntesis de cierre.');
+      next();
+      return node;
+    }
+    if(t.type === 'ident'){
+      next();
+      if(peek() && peek().type === 'op' && peek().value === '('){
+        next();
+        const arg = parseExpression();
+        if(!peek() || peek().value !== ')') throw new Error('Falta un paréntesis de cierre.');
+        next();
+        if(!FUNCS[t.value]) throw new Error('Función desconocida: ' + t.value);
+        return {type:'call', name:t.value, arg};
+      }
+      return {type:'ident', name:t.value};
+    }
+    throw new Error('Token inesperado en la expresión.');
+  }
+
+  const ast = parseExpression();
+  if(pos < tokens.length) throw new Error('Expresión mal formada.');
+  return ast;
+}
+
+function evalAst(node, x){
+  switch(node.type){
+    case 'num': return node.value;
+    case 'neg': return -evalAst(node.arg, x);
+    case 'ident':
+      if(node.name === 'x') return x;
+      if(node.name in CONSTS) return CONSTS[node.name];
+      throw new Error('Variable no reconocida: ' + node.name);
+    case 'call':
+      return FUNCS[node.name](evalAst(node.arg, x));
+    case 'bin': {
+      const l = evalAst(node.left, x), r = evalAst(node.right, x);
+      if(node.op === '+') return l + r;
+      if(node.op === '-') return l - r;
+      if(node.op === '*') return l * r;
+      if(node.op === '/') return l / r;
+      if(node.op === '^') return Math.pow(l, r);
+    }
+  }
+}
+
+function compileFn(src){
+  const ast = parseExpr(src);
+  return (x) => evalAst(ast, x);
+}
+
+function numDeriv(fn, x){
+  const h = 1e-6 * Math.max(1, Math.abs(x));
+  return (fn(x + h) - fn(x - h)) / (2 * h);
+}
+
+/* =========================================================
+   FORMATEO
+   ========================================================= */
+function fmtNum(n, d=6){
+  if(n === undefined || n === null || !isFinite(n)) return '—';
+  return n.toFixed(d);
+}
+function fmtErr(e){
+  if(e === undefined || e === null || !isFinite(e)) return '—';
+  if(e === 0) return '0';
+  if(Math.abs(e) < 1e-4) return e.toExponential(3);
+  return e.toFixed(6);
+}
+
+/* =========================================================
+   ALGORITMOS
+   ========================================================= */
+function runBisection(f, a, b, tol, maxIter){
+  const rows = [];
+  let fa = f(a), fb = f(b);
+  if(!isFinite(fa) || !isFinite(fb)) throw new Error('f(x) no está definida en a o en b.');
+  if(fa === 0) return {rows, root:a, froot:0, converged:true};
+  if(fb === 0) return {rows, root:b, froot:0, converged:true};
+  if(Math.sign(fa) === Math.sign(fb)){
+    throw new Error('El intervalo no encierra una raíz: f(a) y f(b) deben tener signos opuestos. f(a)=' + fmtNum(fa,4) + ', f(b)=' + fmtNum(fb,4) + '.');
+  }
+  let curA = a, curB = b, converged = false, root = null, froot = null;
+  for(let n = 1; n <= maxIter; n++){
+    const c = (curA + curB) / 2;
+    const fc = f(c);
+    const err = Math.abs(curB - curA) / 2;
+    rows.push({n, a:curA, b:curB, c, fc, err});
+    if(fc === 0 || err < tol){
+      converged = true; root = c; froot = fc;
+      break;
+    }
+    if(Math.sign(fc) === Math.sign(fa)){ curA = c; fa = fc; } else { curB = c; fb = fc; }
+    root = c; froot = fc;
+  }
+  return {rows, root, froot, converged};
+}
+
+function runFixedPoint(g, x0, tol, maxIter){
+  const rows = [];
+  let x = x0, converged = false, root = null;
+  for(let n = 1; n <= maxIter; n++){
+    const gx = g(x);
+    if(!isFinite(gx)) throw new Error('g(x) diverge o no está definida en x=' + fmtNum(x,4) + '.');
+    const err = Math.abs(gx - x);
+    rows.push({n, x, gx, err});
+    x = gx;
+    root = x;
+    if(err < tol){ converged = true; break; }
+    if(Math.abs(x) > 1e8) break;
+  }
+  return {rows, root, converged};
+}
+
+function runNewton(f, x0, tol, maxIter){
+  const rows = [];
+  let x = x0, converged = false, root = null;
+  for(let n = 1; n <= maxIter; n++){
+    const fx = f(x);
+    const dfx = numDeriv(f, x);
+    if(Math.abs(dfx) < 1e-12) throw new Error("f'(x) ≈ 0 en x=" + fmtNum(x,4) + ". Elegir otro x₀.");
+    const xNext = x - fx / dfx;
+    const err = Math.abs(xNext - x);
+    rows.push({n, x, fx, dfx, xNext, err});
+    x = xNext;
+    root = x;
+    if(err < tol){ converged = true; break; }
+    if(!isFinite(x) || Math.abs(x) > 1e8) break;
+  }
+  return {rows, root, converged};
+}
+
+function runAitken(g, x0, tol, maxIter){
+  const rows = [];
+  let x = x0, converged = false, root = null;
+  for(let n = 1; n <= maxIter; n++){
+    const x1 = g(x);
+    const x2 = g(x1);
+    if(!isFinite(x1) || !isFinite(x2)) throw new Error('g(x) diverge o no está definida en la iteración ' + n + '.');
+    const denom = x2 - 2*x1 + x;
+    let xAcc;
+    if(Math.abs(denom) < 1e-12){
+      xAcc = x2;
+    } else {
+      xAcc = x - Math.pow(x1 - x, 2) / denom;
+    }
+    const err = Math.abs(xAcc - x);
+    rows.push({n, x, x1, x2, xAcc, err});
+    x = xAcc;
+    root = x;
+    if(err < tol){ converged = true; break; }
+    if(!isFinite(x) || Math.abs(x) > 1e8) break;
+  }
+  return {rows, root, converged};
+}
+
+/* =========================================================
+   GRÁFICO (canvas, estilo figura académica)
+   ========================================================= */
+const canvas = document.getElementById('chart');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+function sampleRange(fn, xMin, xMax, n=400){
+  const xs=[], ys=[];
+  for(let i=0;i<=n;i++){
+    const x = xMin + (xMax-xMin)*i/n;
+    let y;
+    try{ y = fn(x); }catch(e){ y = NaN; }
+    xs.push(x); ys.push(isFinite(y) ? y : NaN);
+  }
+  return {xs, ys};
+}
+
+function niceRangeY(ys){
+  const finite = ys.filter(v => isFinite(v));
+  if(finite.length === 0) return [-1,1];
+  let lo = Math.min(...finite), hi = Math.max(...finite);
+  const med = finite.slice().sort((a,b)=>a-b)[Math.floor(finite.length/2)];
+  const cap = Math.max(Math.abs(med)*8, 5);
+  lo = Math.max(lo, -cap); hi = Math.min(hi, cap);
+  if(lo === hi){ lo -= 1; hi += 1; }
+  const pad = (hi-lo)*0.15;
+  return [lo-pad, hi+pad];
+}
+
+function drawBase(xMin,xMax,yMin,yMax){
+  const w = canvas.getBoundingClientRect().width;
+  const h = canvas.getBoundingClientRect().height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = '#1B1E24';
+  ctx.fillRect(0,0,w,h);
+
+  const toPx = x => (x - xMin)/(xMax-xMin) * (w-60) + 45;
+  const toPy = y => h - 30 - (y - yMin)/(yMax-yMin) * (h-55);
+
+  ctx.strokeStyle = 'rgba(236,237,239,0.07)';
+  ctx.lineWidth = 1;
+  for(let gx = Math.ceil(xMin); gx <= xMax; gx++){
+    const px = toPx(gx);
+    ctx.beginPath(); ctx.moveTo(px,10); ctx.lineTo(px,h-30); ctx.stroke();
+  }
+  const ySteps = 8;
+  for(let i=0;i<=ySteps;i++){
+    const gy = yMin + (yMax-yMin)*i/ySteps;
+    const py = toPy(gy);
+    ctx.beginPath(); ctx.moveTo(45,py); ctx.lineTo(w-15,py); ctx.stroke();
+  }
+
+  ctx.strokeStyle = 'rgba(236,237,239,0.5)';
+  ctx.lineWidth = 1.2;
+  if(yMin < 0 && yMax > 0){
+    const py0 = toPy(0);
+    ctx.beginPath(); ctx.moveTo(45,py0); ctx.lineTo(w-15,py0); ctx.stroke();
+  }
+  if(xMin < 0 && xMax > 0){
+    const px0 = toPx(0);
+    ctx.beginPath(); ctx.moveTo(px0,10); ctx.lineTo(px0,h-30); ctx.stroke();
+  }
+
+  ctx.fillStyle = 'rgba(236,237,239,0.6)';
+  ctx.font = '11.5px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'center';
+  for(let gx = Math.ceil(xMin); gx <= xMax; gx += Math.max(1,Math.round((xMax-xMin)/10))){
+    ctx.fillText(gx.toString(), toPx(gx), h-16);
+  }
+  ctx.textAlign = 'right';
+  for(let i=0;i<=ySteps;i+=2){
+    const gy = yMin + (yMax-yMin)*i/ySteps;
+    ctx.fillText(gy.toFixed(1), 40, toPy(gy)+3);
+  }
+
+  return {toPx, toPy, w, h};
+}
+
+function plotCurve(toPx, toPy, xs, ys, color, width=1.6){
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  let started = false;
+  for(let i=0;i<xs.length;i++){
+    if(!isFinite(ys[i])){ started = false; continue; }
+    const px = toPx(xs[i]), py = toPy(ys[i]);
+    if(!started){ ctx.moveTo(px,py); started = true; } else { ctx.lineTo(px,py); }
+  }
+  ctx.stroke();
+}
+
+function drawPoint(toPx, toPy, x, y, color, r=3.2){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(toPx(x), toPy(y), r, 0, Math.PI*2);
+  ctx.fill();
+}
+
+function drawCrosshair(toPx, toPy, x, y, color){
+  const px = toPx(x), py = toPy(y);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(px-9,py); ctx.lineTo(px+9,py);
+  ctx.moveTo(px,py-9); ctx.lineTo(px,py+9);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(px,py,6,0,Math.PI*2);
+  ctx.stroke();
+}
+
+function setLegend(items){
+  const el = document.getElementById('legend');
+  el.innerHTML = items.map(it =>
+    `<span><span class="dot" style="background:${it.color}"></span>${it.label}</span>`
+  ).join('');
+}
+
+/* ---- Bisección ---- */
+function renderBisectionChart(f, rows, a0, b0, count){
+  count = count == null ? rows.length : count;
+  resizeCanvas();
+  const margin = (b0-a0)*0.4 || 1;
+  const xMin = a0 - margin, xMax = b0 + margin;
+  const {xs, ys} = sampleRange(f, xMin, xMax);
+  const [yMin, yMax] = niceRangeY(ys);
+  const {toPx, toPy} = drawBase(xMin, xMax, yMin, yMax);
+  plotCurve(toPx, toPy, xs, ys, '#ECEDEF', 1.6);
+
+  const visible = rows.slice(0, count);
+  visible.forEach((row, idx) => {
+    const alpha = 0.25 + 0.6 * (idx / Math.max(1,rows.length-1));
+    drawPoint(toPx, toPy, row.c, 0, `rgba(46,139,132,${alpha})`, 3);
+  });
+  const last = visible[visible.length-1];
+  if(last) drawCrosshair(toPx, toPy, last.c, 0, count >= rows.length ? '#4FAE7C' : '#5B9BD9');
+
+  setLegend([
+    {color:'#ECEDEF', label:'f(x)'},
+    {color:'#2E8B84', label:'punto medio cₙ (por iteración)'},
+    {color:'#4FAE7C', label:'raíz aproximada'}
+  ]);
+}
+
+/* ---- Punto fijo (cobweb) ---- */
+function renderFixedPointChart(g, rows, x0, count){
+  count = count == null ? rows.length : count;
+  resizeCanvas();
+  const xs_all = rows.map(r=>r.x).concat(rows.map(r=>r.gx)).concat([x0]);
+  let xMin = Math.min(...xs_all), xMax = Math.max(...xs_all);
+  const span = (xMax-xMin) || 1;
+  xMin -= span*0.5; xMax += span*0.5;
+
+  const {xs, ys} = sampleRange(g, xMin, xMax);
+  const yMin2 = Math.min(...ys.filter(isFinite), xMin);
+  const yMax2 = Math.max(...ys.filter(isFinite), xMax);
+  const pad = (yMax2-yMin2)*0.15 || 1;
+  const yMin = yMin2-pad, yMax = yMax2+pad;
+
+  const {toPx, toPy} = drawBase(xMin, xMax, yMin, yMax);
+
+  ctx.strokeStyle = 'rgba(91,155,217,0.55)';
+  ctx.lineWidth = 1.4;
+  ctx.setLineDash([4,3]);
+  ctx.beginPath();
+  ctx.moveTo(toPx(xMin), toPy(xMin));
+  ctx.lineTo(toPx(xMax), toPy(xMax));
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  plotCurve(toPx, toPy, xs, ys, '#ECEDEF', 1.6);
+
+  const visible = rows.slice(0, count);
+
+  ctx.strokeStyle = 'rgba(46,139,132,0.8)';
+  ctx.lineWidth = 1.3;
+  ctx.beginPath();
+  let x = x0;
+  ctx.moveTo(toPx(x), toPy(x));
+  visible.forEach(row => {
+    ctx.lineTo(toPx(row.x), toPy(row.gx));
+    ctx.lineTo(toPx(row.gx), toPy(row.gx));
+  });
+  ctx.stroke();
+
+  visible.forEach((row,idx)=>{
+    const alpha = 0.3 + 0.6*(idx/Math.max(1,rows.length-1));
+    drawPoint(toPx, toPy, row.gx, row.gx, `rgba(46,139,132,${alpha})`, 2.6);
+  });
+  const last = visible[visible.length-1];
+  if(last) drawCrosshair(toPx, toPy, last.gx, last.gx, count >= rows.length ? '#4FAE7C' : '#5B9BD9');
+
+  setLegend([
+    {color:'#ECEDEF', label:'g(x)'},
+    {color:'#5B9BD9', label:'y = x'},
+    {color:'#2E8B84', label:'trayectoria (telaraña)'},
+    {color:'#4FAE7C', label:'punto fijo aproximado'}
+  ]);
+}
+
+/* ---- Newton-Raphson ---- */
+function renderNewtonChart(f, rows, x0, count){
+  count = count == null ? rows.length : count;
+  resizeCanvas();
+  const xs_all = rows.map(r=>r.x).concat([x0]);
+  let xMin = Math.min(...xs_all), xMax = Math.max(...xs_all);
+  const span = (xMax-xMin) || 2;
+  xMin -= span*0.9 + 0.5; xMax += span*0.9 + 0.5;
+
+  const {xs, ys} = sampleRange(f, xMin, xMax);
+  const [yMin, yMax] = niceRangeY(ys);
+  const {toPx, toPy} = drawBase(xMin, xMax, yMin, yMax);
+  plotCurve(toPx, toPy, xs, ys, '#ECEDEF', 1.6);
+
+  const shown = rows.slice(0, Math.min(count, 5));
+  shown.forEach((row, idx) => {
+    const alpha = 0.35 + 0.5*(idx/Math.max(1,shown.length-1));
+    const x1 = xMin, x2 = xMax;
+    const y1 = row.fx + row.dfx*(x1-row.x);
+    const y2 = row.fx + row.dfx*(x2-row.x);
+    ctx.strokeStyle = `rgba(91,155,217,${alpha})`;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(toPx(x1), toPy(Math.max(Math.min(y1,yMax*3),yMin*3)));
+    ctx.lineTo(toPx(x2), toPy(Math.max(Math.min(y2,yMax*3),yMin*3)));
+    ctx.stroke();
+    drawPoint(toPx, toPy, row.x, row.fx, `rgba(46,139,132,${alpha+0.15})`, 3);
+  });
+
+  const visible = rows.slice(0, count);
+  const last = visible[visible.length-1];
+  if(last) drawCrosshair(toPx, toPy, last.xNext, 0, count >= rows.length ? '#4FAE7C' : '#5B9BD9');
+
+  setLegend([
+    {color:'#ECEDEF', label:'f(x)'},
+    {color:'#5B9BD9', label:'rectas tangentes (primeras iter.)'},
+    {color:'#2E8B84', label:'puntos (xₙ, f(xₙ))'},
+    {color:'#4FAE7C', label:'raíz aproximada'}
+  ]);
+}
+
+/* ---- Aitken ---- */
+function renderAitkenChart(g, rows, x0, count){
+  count = count == null ? rows.length : count;
+  resizeCanvas();
+  const xs_all = rows.map(r=>r.x).concat(rows.map(r=>r.x1)).concat(rows.map(r=>r.x2)).concat(rows.map(r=>r.xAcc)).concat([x0]);
+  let xMin = Math.min(...xs_all), xMax = Math.max(...xs_all);
+  const span = (xMax-xMin) || 1;
+  xMin -= span*0.5; xMax += span*0.5;
+
+  const {xs, ys} = sampleRange(g, xMin, xMax);
+  const yMin2 = Math.min(...ys.filter(isFinite), xMin);
+  const yMax2 = Math.max(...ys.filter(isFinite), xMax);
+  const pad = (yMax2-yMin2)*0.15 || 1;
+  const yMin = yMin2-pad, yMax = yMax2+pad;
+
+  const {toPx, toPy} = drawBase(xMin, xMax, yMin, yMax);
+
+  ctx.strokeStyle = 'rgba(91,155,217,0.55)';
+  ctx.lineWidth = 1.4;
+  ctx.setLineDash([4,3]);
+  ctx.beginPath();
+  ctx.moveTo(toPx(xMin), toPy(xMin));
+  ctx.lineTo(toPx(xMax), toPy(xMax));
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  plotCurve(toPx, toPy, xs, ys, '#ECEDEF', 1.6);
+
+  const visible = rows.slice(0, count);
+
+  ctx.strokeStyle = 'rgba(236,237,239,0.22)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  let xf = x0;
+  ctx.moveTo(toPx(xf), toPy(xf));
+  visible.forEach(row => {
+    ctx.lineTo(toPx(row.x), toPy(row.x1));
+    ctx.lineTo(toPx(row.x1), toPy(row.x1));
+  });
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(46,139,132,0.85)';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  let xp = x0;
+  ctx.moveTo(toPx(xp), toPy(xp));
+  visible.forEach(row => { ctx.lineTo(toPx(row.xAcc), toPy(row.xAcc)); });
+  ctx.stroke();
+
+  visible.forEach((row, idx) => {
+    const alpha = 0.3 + 0.6 * (idx / Math.max(1,rows.length-1));
+    drawPoint(toPx, toPy, row.xAcc, row.xAcc, `rgba(46,139,132,${alpha})`, 3.2);
+  });
+  const last = visible[visible.length-1];
+  if(last) drawCrosshair(toPx, toPy, last.xAcc, last.xAcc, count >= rows.length ? '#4FAE7C' : '#5B9BD9');
+
+  setLegend([
+    {color:'#ECEDEF', label:'g(x)'},
+    {color:'#5B9BD9', label:'y = x'},
+    {color:'#2E8B84', label:'x̂ₙ (sucesión acelerada, Aitken Δ²)'},
+    {color:'#4FAE7C', label:'raíz aproximada'}
+  ]);
+}
+
+/* =========================================================
+   TABLA
+   ========================================================= */
+function renderTable(method, rows){
+  const thead = document.getElementById('theadRow');
+  const tbody = document.getElementById('tbody');
+  let headers;
+  if(method === 'biseccion') headers = ['n','a','b','c','f(c)','error'];
+  else if(method === 'puntofijo') headers = ['n','xₙ','g(xₙ)','error'];
+  else if(method === 'aitken') headers = ['n','xₙ','g(xₙ)','g(g(xₙ))','x̂ₙ','error'];
+  else headers = ['n','xₙ','f(xₙ)',"f'(xₙ)",'xₙ₊₁','error'];
+
+  thead.innerHTML = '<tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+
+  tbody.innerHTML = '';
+  rows.forEach((row, idx) => {
+    const tr = document.createElement('tr');
+    tr.dataset.index = idx;
+    if(idx === rows.length-1) tr.classList.add('final');
+    let cells;
+    if(method === 'biseccion'){
+      cells = [row.n, fmtNum(row.a), fmtNum(row.b), fmtNum(row.c), fmtNum(row.fc), fmtErr(row.err)];
+    } else if(method === 'puntofijo'){
+      cells = [row.n, fmtNum(row.x), fmtNum(row.gx), fmtErr(row.err)];
+    } else if(method === 'aitken'){
+      cells = [row.n, fmtNum(row.x), fmtNum(row.x1), fmtNum(row.x2), fmtNum(row.xAcc), fmtErr(row.err)];
+    } else {
+      cells = [row.n, fmtNum(row.x), fmtNum(row.fx), fmtNum(row.dfx), fmtNum(row.xNext), fmtErr(row.err)];
+    }
+    tr.innerHTML = cells.map((c,i)=>`<td style="animation-delay:${idx*18}ms">${c}</td>`).join('');
+    tbody.appendChild(tr);
+  });
+  document.getElementById('tableCount').textContent = rows.length + ' filas';
+}
+
+/* =========================================================
+   ECUACIÓN (MathJax) Y LEYENDAS DINÁMICAS
+   ========================================================= */
+const EQUATIONS = {
+  biseccion: { tex:'\\[ c_n = \\dfrac{a_n+b_n}{2} \\]', num:'(1)' },
+  puntofijo: { tex:'\\[ x_{n+1} = g(x_n) \\]', num:'(2)' },
+  newton: { tex:"\\[ x_{n+1} = x_n - \\dfrac{f(x_n)}{f'(x_n)} \\]", num:'(3)' },
+  aitken: { tex:'\\[ \\hat{x}_n = x_n - \\dfrac{\\left(x_{n+1}-x_n\\right)^2}{x_{n+2} - 2x_{n+1} + x_n} \\]', num:'(4)' }
+};
+const FIG_CAPTIONS = {
+  biseccion: 'Trayectoria de convergencia del punto medio c<sub>n</sub> sobre f(x) — método de Bisección.',
+  puntofijo: 'Diagrama de telaraña de la iteración x<sub>n+1</sub> = g(x<sub>n</sub>) sobre la recta y = x.',
+  newton: 'Rectas tangentes sucesivas del método de Newton-Raphson sobre f(x).',
+  aitken: 'Sucesión acelerada x̂<sub>n</sub> (Δ² de Aitken) sobre la telaraña de g(x); en gris, la sucesión sin acelerar.'
+};
+const TABLE_CAPTIONS = {
+  biseccion: 'Registro de iteraciones — método de Bisección.',
+  puntofijo: 'Registro de iteraciones — método de Punto Fijo.',
+  newton: 'Registro de iteraciones — método de Newton-Raphson.',
+  aitken: 'Registro de iteraciones — método de Aitken (Δ²), acelerando la sucesión de punto fijo.'
+};
+
+function typesetElement(el){
+  if(window.MathJax && window.MathJax.typesetPromise){
+    MathJax.typesetPromise([el]).catch(()=>{});
+  } else if(window.MathJax && window.MathJax.startup && window.MathJax.startup.promise){
+    window.MathJax.startup.promise.then(() => {
+      if(window.MathJax.typesetPromise) MathJax.typesetPromise([el]).catch(()=>{});
+    });
+  }
+}
+function updateEquation(method){
+  const eq = EQUATIONS[method];
+  document.getElementById('eqFormula').textContent = eq.tex;
+  document.getElementById('eqNumber').textContent = eq.num;
+  typesetElement(document.getElementById('eqFormula'));
+}
+function updateCaptions(method){
+  document.getElementById('figCaption').innerHTML = '<b>Figura 1.</b> ' + FIG_CAPTIONS[method];
+  document.getElementById('tableCaption').innerHTML = '<b>Tabla 1.</b> ' + TABLE_CAPTIONS[method];
+}
+
+/* =========================================================
+   VISTA PREVIA TIPESET (LaTeX) DE LA EXPRESIÓN INGRESADA
+   ========================================================= */
+function precOf(node){
+  if(node.type === 'bin'){
+    if(node.op === '+' || node.op === '-') return 1;
+    if(node.op === '*') return 2;
+    if(node.op === '/') return 5;
+    if(node.op === '^') return 4;
+  }
+  if(node.type === 'neg') return 3;
+  return 5;
+}
+function astToLatex(node, parentPrec){
+  parentPrec = parentPrec || 0;
+  const myPrec = precOf(node);
+  let str;
+  switch(node.type){
+    case 'num':
+      str = node.value.toString();
+      break;
+    case 'ident':
+      if(node.name === 'x') str = 'x';
+      else if(node.name === 'pi') str = '\\pi';
+      else if(node.name === 'e') str = 'e';
+      else str = node.name;
+      break;
+    case 'call': {
+      const inner = astToLatex(node.arg, 0);
+      if(node.name === 'sqrt') str = '\\sqrt{' + inner + '}';
+      else if(node.name === 'cbrt') str = '\\sqrt[3]{' + inner + '}';
+      else if(node.name === 'abs') str = '\\left|' + inner + '\\right|';
+      else if(node.name === 'exp') str = 'e^{' + inner + '}';
+      else {
+        const names = {sin:'\\sin',cos:'\\cos',tan:'\\tan',asin:'\\arcsin',acos:'\\arccos',atan:'\\arctan',
+          sinh:'\\sinh',cosh:'\\cosh',tanh:'\\tanh',ln:'\\ln',log:'\\log_{10}',log2:'\\log_2'};
+        const fn = names[node.name] || ('\\operatorname{' + node.name + '}');
+        str = fn + '\\left(' + inner + '\\right)';
+      }
+      break;
+    }
+    case 'neg':
+      str = '-' + astToLatex(node.arg, myPrec);
+      break;
+    case 'bin':
+      if(node.op === '^'){
+        str = astToLatex(node.left, myPrec+1) + '^{' + astToLatex(node.right, 0) + '}';
+      } else if(node.op === '/'){
+        str = '\\dfrac{' + astToLatex(node.left, 0) + '}{' + astToLatex(node.right, 0) + '}';
+      } else if(node.op === '*'){
+        str = astToLatex(node.left, myPrec) + ' \\cdot ' + astToLatex(node.right, myPrec+1);
+      } else {
+        str = astToLatex(node.left, myPrec) + (node.op === '+' ? ' + ' : ' - ') + astToLatex(node.right, myPrec + (node.op === '-' ? 1 : 0));
+      }
+      break;
+  }
+  return myPrec < parentPrec ? '\\left(' + str + '\\right)' : str;
+}
+
+function setupExprPreview(inputId, previewId, label){
+  const input = document.getElementById(inputId);
+  const preview = document.getElementById(previewId);
+  function render(){
+    const src = input.value.trim();
+    if(!src){ preview.innerHTML = ''; return; }
+    try{
+      const ast = parseExpr(src);
+      const latex = astToLatex(ast, 0);
+      preview.innerHTML = '\\(' + label + ' = ' + latex + '\\)';
+      typesetElement(preview);
+    }catch(e){
+      preview.innerHTML = '<span style="font-family:var(--font-mono); font-size:12px; color:var(--ink-faint);">' + label + ' = … (expresión incompleta)</span>';
+    }
+  }
+  input.addEventListener('input', render);
+  render();
+}
+setupExprPreview('b-f','b-f-preview','f(x)');
+setupExprPreview('p-g','p-g-preview','g(x)');
+setupExprPreview('n-f','n-f-preview','f(x)');
+setupExprPreview('ai-g','ai-g-preview','g(x)');
+
+/* =========================================================
+   TECLADO INTELIGENTE DE FUNCIONES
+   ========================================================= */
+const EXPR_FIELDS = { 'b-f':'f(x)', 'p-g':'g(x)', 'n-f':'f(x)', 'ai-g':'g(x)' };
+const NUMERIC_FIELDS = {
+  'b-a':'a', 'b-b':'b', 'b-tol':'tolerancia', 'b-max':'iter. máx.',
+  'p-x0':'x₀', 'p-tol':'tolerancia', 'p-max':'iter. máx.',
+  'n-x0':'x₀', 'n-tol':'tolerancia', 'n-max':'iter. máx.',
+  'ai-x0':'x₀', 'ai-tol':'tolerancia', 'ai-max':'iter. máx.'
+};
+
+let currentMethod = 'biseccion';
+let activeField = null;
+
+function exprInputId(){
+  if(currentMethod === 'puntofijo') return 'p-g';
+  if(currentMethod === 'aitken') return 'ai-g';
+  if(currentMethod === 'newton') return 'n-f';
+  return 'b-f';
+}
+function getActiveInput(){
+  return activeField || document.getElementById(exprInputId());
+}
+function updateKeypadTarget(){
+  const input = getActiveInput();
+  const label = EXPR_FIELDS[input.id] || NUMERIC_FIELDS[input.id] || (currentMethod === 'puntofijo' || currentMethod === 'aitken' ? 'g(x)' : 'f(x)');
+  document.getElementById('kbTarget').textContent = label;
+  keypadEl.classList.toggle('kb-numeric', !!NUMERIC_FIELDS[input.id]);
+}
+
+const keypadEl = document.getElementById('keypad');
+function openKeypad(field){
+  activeField = field;
+  updateKeypadTarget();
+  keypadEl.classList.add('kb-open');
+}
+function closeKeypad(){
+  keypadEl.classList.remove('kb-open');
+}
+function scheduleKeypadClose(){
+  setTimeout(() => {
+    const active = document.activeElement;
+    if(active === activeField || keypadEl.contains(active)) return;
+    closeKeypad();
+  }, 120);
+}
+keypadEl.addEventListener('mousedown', (e) => { e.preventDefault(); });
+
+function dispatchInput(input){
+  input.dispatchEvent(new Event('input', {bubbles:true}));
+}
+function kbInsert(before, after){
+  const input = getActiveInput();
+  const start = input.selectionStart != null ? input.selectionStart : input.value.length;
+  const end = input.selectionEnd != null ? input.selectionEnd : input.value.length;
+  const val = input.value;
+  const selected = val.slice(start, end);
+  const newVal = val.slice(0, start) + before + selected + after + val.slice(end);
+  input.value = newVal;
+  const cursor = start + before.length + selected.length;
+  input.focus();
+  input.setSelectionRange(cursor, cursor);
+  dispatchInput(input);
+}
+function kbBackspace(){
+  const input = getActiveInput();
+  const start = input.selectionStart != null ? input.selectionStart : input.value.length;
+  const end = input.selectionEnd != null ? input.selectionEnd : input.value.length;
+  const val = input.value;
+  let newVal, cursor;
+  if(start !== end){
+    newVal = val.slice(0,start) + val.slice(end);
+    cursor = start;
+  } else if(start > 0){
+    newVal = val.slice(0,start-1) + val.slice(start);
+    cursor = start-1;
+  } else {
+    newVal = val; cursor = 0;
+  }
+  input.value = newVal;
+  input.focus();
+  input.setSelectionRange(cursor, cursor);
+  dispatchInput(input);
+}
+function kbClear(){
+  const input = getActiveInput();
+  input.value = '';
+  input.focus();
+  dispatchInput(input);
+}
+
+document.querySelectorAll('.kbtn[data-b]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    kbInsert(btn.dataset.b, btn.dataset.a || '');
+  });
+});
+document.getElementById('kbBack').addEventListener('click', kbBackspace);
+document.getElementById('kbClear').addEventListener('click', kbClear);
+
+Object.keys(EXPR_FIELDS).concat(Object.keys(NUMERIC_FIELDS)).forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('focus', () => openKeypad(el));
+  el.addEventListener('blur', scheduleKeypadClose);
+});
+
+/* =========================================================
+   ASISTENTE TEÓRICO DE VOZ (Web Speech API, 100% local)
+   ========================================================= */
+const THEORY = {
+  biseccion: 'El método de bisección se apoya en el teorema de Bolzano: si f es continua en el intervalo a, b, y f de a por f de b es menor que cero, existe al menos una raíz dentro de ese intervalo. En cada iteración se calcula el punto medio c, y se reemplaza el extremo cuyo signo coincide con el de f de c, reduciendo el intervalo a la mitad. Es un método robusto, de convergencia garantizada, aunque lineal.',
+  puntofijo: 'El método de punto fijo reescribe la ecuación f de x igual a cero como x igual a g de x, y genera la sucesión x sub n más uno igual a g de x sub n, partiendo de un valor inicial x cero. Si la derivada de g, en valor absoluto, es menor que uno cerca de la raíz, la sucesión converge de forma lineal. La elección de la función g es crítica.',
+  newton: 'El método de Newton-Raphson aproxima la función mediante la recta tangente en cada punto: x sub n más uno es igual a x sub n, menos f de x sub n, sobre f prima de x sub n. Cuando converge, lo hace de forma cuadrática. Requiere que la derivada no se anule cerca de la raíz.',
+  aitken: 'La aceleración de Aitken, también llamada proceso delta al cuadrado, toma una sucesión de convergencia lineal y construye una nueva sucesión que converge más rápido, típicamente de forma cuadrática, sin necesidad de conocer la derivada de la función.'
+};
+
+let vaVoices = [];
+let vaSelectedVoice = null;
+
+function vaSupported(){ return 'speechSynthesis' in window; }
+
+function vaPickBestVoice(){
+  if(!vaVoices.length) return;
+  let v = vaVoices.find(v => /jorge/i.test(v.name));
+  if(!v) v = vaVoices.find(v => v.lang && v.lang.toLowerCase() === 'es-bo');
+  if(!v) v = vaVoices.find(v => v.lang && v.lang.toLowerCase().startsWith('es'));
+  if(!v) v = vaVoices[0];
+  vaSelectedVoice = v || null;
+  vaUpdateVoiceLabel();
+  vaSyncSelect();
+}
+function vaUpdateVoiceLabel(){
+  const label = document.getElementById('vaVoiceLabel');
+  if(!vaSupported()){ label.textContent = 'Síntesis de voz no disponible en este navegador'; return; }
+  if(!vaSelectedVoice){ label.textContent = 'Cargando voces del sistema…'; return; }
+  const isJorge = /jorge/i.test(vaSelectedVoice.name);
+  label.textContent = isJorge
+    ? 'Voz: ' + vaSelectedVoice.name + ' ✓'
+    : 'Voz: ' + vaSelectedVoice.name + ' ("Jorge" no encontrada)';
+}
+function vaPopulateSelect(){
+  const sel = document.getElementById('vaVoiceSelect');
+  sel.innerHTML = '';
+  vaVoices.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = v.name + ' (' + v.lang + ')';
+    sel.appendChild(opt);
+  });
+}
+function vaSyncSelect(){
+  const sel = document.getElementById('vaVoiceSelect');
+  const idx = vaVoices.indexOf(vaSelectedVoice);
+  if(idx >= 0) sel.value = idx;
+}
+function vaLoadVoices(){
+  vaVoices = vaSupported() ? window.speechSynthesis.getVoices() : [];
+  vaPopulateSelect();
+  vaPickBestVoice();
+}
+if(vaSupported()){
+  window.speechSynthesis.onvoiceschanged = vaLoadVoices;
+  vaLoadVoices();
+} else {
+  document.getElementById('vaVoiceLabel').textContent = 'Síntesis de voz no disponible en este navegador';
+  document.getElementById('vaPlay').disabled = true;
+  document.getElementById('vaPause').disabled = true;
+  document.getElementById('vaStop').disabled = true;
+}
+document.getElementById('vaVoiceSelect').addEventListener('change', (e) => {
+  vaSelectedVoice = vaVoices[parseInt(e.target.value)] || null;
+  vaUpdateVoiceLabel();
+});
+function vaSpeak(){
+  if(!vaSupported()) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(THEORY[currentMethod]);
+  if(vaSelectedVoice) utter.voice = vaSelectedVoice;
+  utter.lang = vaSelectedVoice ? vaSelectedVoice.lang : 'es-BO';
+  utter.rate = 0.98;
+  utter.pitch = 1;
+  window.speechSynthesis.speak(utter);
+}
+document.getElementById('vaPlay').addEventListener('click', () => {
+  if(!vaSupported()) return;
+  if(window.speechSynthesis.paused){ window.speechSynthesis.resume(); return; }
+  vaSpeak();
+});
+document.getElementById('vaPause').addEventListener('click', () => {
+  if(vaSupported() && window.speechSynthesis.speaking) window.speechSynthesis.pause();
+});
+document.getElementById('vaStop').addEventListener('click', () => {
+  if(vaSupported()) window.speechSynthesis.cancel();
+});
+function vaUpdateText(method){
+  document.getElementById('vaText').textContent = THEORY[method];
+  if(vaSupported()) window.speechSynthesis.cancel();
+}
+
+/* =========================================================
+   CONTROL DE UI
+   ========================================================= */
+document.getElementById('tabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-method]');
+  if(!btn) return;
+  document.querySelectorAll('nav.toc button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMethod = btn.dataset.method;
+  document.querySelectorAll('.method-form').forEach(f=>f.style.display='none');
+  document.getElementById('form-'+currentMethod).style.display = 'block';
+  updateEquation(currentMethod);
+  updateCaptions(currentMethod);
+  vaUpdateText(currentMethod);
+  hideError();
+  updateKeypadTarget();
+  closeKeypad();
+});
+
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const parts = chip.dataset.fill.split('|');
+    if(parts[0] === 'b'){
+      document.getElementById('b-f').value = parts[1];
+      document.getElementById('b-a').value = parts[2];
+      document.getElementById('b-b').value = parts[3];
+      dispatchInput(document.getElementById('b-f'));
+    } else if(parts[0] === 'p'){
+      document.getElementById('p-g').value = parts[1];
+      document.getElementById('p-x0').value = parts[2];
+      dispatchInput(document.getElementById('p-g'));
+    } else if(parts[0] === 'n'){
+      document.getElementById('n-f').value = parts[1];
+      document.getElementById('n-x0').value = parts[2];
+      dispatchInput(document.getElementById('n-f'));
+    } else if(parts[0] === 'ai'){
+      document.getElementById('ai-g').value = parts[1];
+      document.getElementById('ai-x0').value = parts[2];
+      dispatchInput(document.getElementById('ai-g'));
+    }
+  });
+});
+
+function showError(msg){
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function hideError(){
+  document.getElementById('errorMsg').classList.remove('show');
+}
+
+function setResults({root, iters, err, froot, status, ok}){
+  document.getElementById('tbRoot').textContent = root;
+  document.getElementById('tbIter').textContent = iters;
+  document.getElementById('tbErr').textContent = err;
+  document.getElementById('tbFroot').textContent = froot;
+  const statusEl = document.getElementById('tbStatus');
+  statusEl.textContent = status;
+  statusEl.className = 'rvalue ' + (ok === true ? 'ok' : ok === false ? 'bad' : '');
+}
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  hideError();
+  try{
+    if(currentMethod === 'biseccion'){
+      const fSrc = document.getElementById('b-f').value;
+      const a = parseFloat(document.getElementById('b-a').value);
+      const b = parseFloat(document.getElementById('b-b').value);
+      const tol = parseFloat(document.getElementById('b-tol').value);
+      const maxIter = parseInt(document.getElementById('b-max').value);
+      if(!isFinite(a) || !isFinite(b)) throw new Error('a y b deben ser números válidos.');
+      if(a >= b) throw new Error('Se requiere a < b.');
+      const f = compileFn(fSrc);
+      const result = runBisection(f, a, b, tol, maxIter);
+      renderTable('biseccion', result.rows);
+      renderBisectionChart(f, result.rows, a, b);
+      setResults({
+        root: fmtNum(result.root),
+        iters: result.rows.length,
+        err: fmtErr(result.rows.length ? result.rows[result.rows.length-1].err : 0),
+        froot: fmtNum(result.froot),
+        status: result.converged ? 'Convergió' : 'Máx. iteraciones alcanzado',
+        ok: result.converged
+      });
+    }
+
+    else if(currentMethod === 'puntofijo'){
+      const gSrc = document.getElementById('p-g').value;
+      const x0 = parseFloat(document.getElementById('p-x0').value);
+      const tol = parseFloat(document.getElementById('p-tol').value);
+      const maxIter = parseInt(document.getElementById('p-max').value);
+      if(!isFinite(x0)) throw new Error('x₀ debe ser un número válido.');
+      const g = compileFn(gSrc);
+      const result = runFixedPoint(g, x0, tol, maxIter);
+      renderTable('puntofijo', result.rows);
+      renderFixedPointChart(g, result.rows, x0);
+      setResults({
+        root: fmtNum(result.root),
+        iters: result.rows.length,
+        err: fmtErr(result.rows.length ? result.rows[result.rows.length-1].err : 0),
+        froot: '—',
+        status: result.converged ? 'Convergió' : 'No convergió / máx. iter.',
+        ok: result.converged
+      });
+    }
+
+    else if(currentMethod === 'newton'){
+      const fSrc = document.getElementById('n-f').value;
+      const x0 = parseFloat(document.getElementById('n-x0').value);
+      const tol = parseFloat(document.getElementById('n-tol').value);
+      const maxIter = parseInt(document.getElementById('n-max').value);
+      if(!isFinite(x0)) throw new Error('x₀ debe ser un número válido.');
+      const f = compileFn(fSrc);
+      const result = runNewton(f, x0, tol, maxIter);
+      renderTable('newton', result.rows);
+      renderNewtonChart(f, result.rows, x0);
+      const lastFx = result.rows.length ? f(result.root) : NaN;
+      setResults({
+        root: fmtNum(result.root),
+        iters: result.rows.length,
+        err: fmtErr(result.rows.length ? result.rows[result.rows.length-1].err : 0),
+        froot: fmtNum(lastFx),
+        status: result.converged ? 'Convergió' : 'No convergió / máx. iter.',
+        ok: result.converged
+      });
+    }
+
+    else if(currentMethod === 'aitken'){
+      const gSrc = document.getElementById('ai-g').value;
+      const x0 = parseFloat(document.getElementById('ai-x0').value);
+      const tol = parseFloat(document.getElementById('ai-tol').value);
+      const maxIter = parseInt(document.getElementById('ai-max').value);
+      if(!isFinite(x0)) throw new Error('x₀ debe ser un número válido.');
+      const g = compileFn(gSrc);
+      const result = runAitken(g, x0, tol, maxIter);
+      renderTable('aitken', result.rows);
+      renderAitkenChart(g, result.rows, x0);
+      setResults({
+        root: fmtNum(result.root),
+        iters: result.rows.length,
+        err: fmtErr(result.rows.length ? result.rows[result.rows.length-1].err : 0),
+        froot: '—',
+        status: result.converged ? 'Convergió' : 'No convergió / máx. iter.',
+        ok: result.converged
+      });
+    }
+  }catch(err){
+    showError(err.message);
+    setResults({root:'—', iters:'—', err:'—', froot:'—', status:'Error', ok:false});
+    document.getElementById('tbody').innerHTML = '';
+    document.getElementById('theadRow').innerHTML = '';
+    document.getElementById('tableCount').textContent = '0 filas';
+  }
+});
+
+window.addEventListener('load', () => {
+  updateEquation(currentMethod);
+  updateCaptions(currentMethod);
+  vaUpdateText(currentMethod);
+  updateKeypadTarget();
+  document.getElementById('runBtn').click();
+});
+window.addEventListener('resize', () => {
+  document.getElementById('runBtn').click();
+});
+</script>
+</body>
+</html>

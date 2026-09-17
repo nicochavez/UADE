@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Newton–Cotes | Simulador de Cuadratura Numérica</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --ink:#071527;
+  --panel:#0d2340;
+  --panel-2:#123055;
+  --panel-3:#0a1c33;
+  --line:#1e4976;
+  --line-soft:rgba(79,209,197,0.14);
+  --accent:#4fd1c5;
+  --accent-dim:rgba(79,209,197,0.35);
+  --amber:#f2a65a;
+  --amber-dim:rgba(242,166,90,0.35);
+  --mint:#7fe0b4;
+  --text:#e8eef5;
+  --text-dim:#93a8c2;
+  --danger:#ef6f6f;
+  --font-display:'Space Grotesk',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--ink);
+  color:var(--text);
+  font-family:var(--font-body);
+  min-height:100vh;
+  background-image:
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size:34px 34px;
+}
+::selection{background:var(--accent);color:var(--ink);}
+a{color:var(--accent);}
+
+/* ---------- HEADER ---------- */
+header{
+  position:relative;
+  padding:38px 6vw 28px;
+  border-bottom:1px solid var(--line);
+  background:
+    radial-gradient(circle at 88% -20%, rgba(79,209,197,0.16), transparent 55%),
+    linear-gradient(180deg, #081a30, var(--ink) 90%);
+  overflow:hidden;
+}
+header::before{
+  content:"";
+  position:absolute;inset:0;
+  background-image:repeating-linear-gradient(90deg, transparent 0 118px, var(--line-soft) 118px 119px);
+  opacity:.5;
+  pointer-events:none;
+}
+.header-inner{
+  position:relative;z-index:1;
+}
+.intro-visual-row{
+  display:grid;grid-template-columns:1fr auto;gap:32px;align-items:start;margin-bottom:8px;
+}
+@media (max-width:980px){
+  .intro-visual-row{grid-template-columns:1fr;}
+  .intro-visual-row .header-visual{margin-top:22px;max-width:460px;width:100%;}
+}
+.header-visual{
+  width:380px;flex-shrink:0;position:relative;
+  background:linear-gradient(180deg, rgba(18,48,85,0.55), rgba(10,28,51,0.55));
+  border:1px solid var(--line);
+  border-radius:3px;
+  padding:16px 18px 18px;
+}
+.header-visual::before,.header-visual::after{
+  content:"";position:absolute;width:14px;height:14px;border:1px solid var(--accent);opacity:.55;
+}
+.header-visual::before{top:-1px;left:-1px;border-right:none;border-bottom:none;}
+.header-visual::after{bottom:-1px;right:-1px;border-left:none;border-top:none;}
+.hv-eyebrow{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--amber);margin:0 0 10px;display:flex;align-items:center;gap:7px;
+}
+.hv-eyebrow::before{content:"◆";font-size:8px;}
+.hv-svg{width:100%;height:auto;display:block;}
+.hv-caption{margin-top:8px;border-top:1px dashed var(--line);padding-top:11px;}
+.hv-line{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;font-size:12.5px;}
+.hv-line .hv-tag{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);white-space:nowrap;min-width:78px;}
+.hv-line .hv-eq{overflow-x:auto;flex:1;}
+.hv-line .hv-eq .katex{font-size:0.92em;color:var(--text);}
+.hv-note{font-size:11px;color:var(--text-dim);line-height:1.55;margin:4px 0 0;}
+.hv-note b{color:var(--mint);font-weight:600;}
+.eyebrow{
+  font-family:var(--font-mono);
+  letter-spacing:.24em;
+  font-size:11.5px;
+  color:var(--accent);
+  text-transform:uppercase;
+  display:flex;align-items:center;gap:10px;
+}
+.eyebrow::before{content:"";width:22px;height:1px;background:var(--accent);display:inline-block;}
+h1{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:clamp(34px,6vw,64px);
+  letter-spacing:-.01em;
+  margin:10px 0 6px;
+  line-height:.98;
+}
+h1 span{color:var(--accent);}
+.subhead{
+  font-size:15px;
+  color:var(--text-dim);
+  max-width:640px;
+  margin:0 0 18px;
+  line-height:1.5;
+}
+.credit{
+  font-family:var(--font-mono);
+  font-size:12.5px;
+  color:var(--text-dim);
+  display:flex;flex-wrap:wrap;gap:6px 14px;
+  border-top:1px dashed var(--line);
+  padding-top:14px;
+  max-width:640px;
+}
+.credit b{color:var(--accent);font-weight:600;}
+
+/* ---------- NAV ---------- */
+nav{
+  position:sticky;top:0;z-index:50;
+  display:flex;gap:2px;
+  background:var(--panel-3);
+  border-bottom:1px solid var(--line);
+  padding:0 6vw;
+  overflow-x:auto;
+}
+.tabbtn{
+  font-family:var(--font-mono);
+  font-size:12.5px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  background:transparent;
+  border:none;
+  padding:16px 18px;
+  cursor:pointer;
+  position:relative;
+  white-space:nowrap;
+  transition:color .15s;
+}
+.tabbtn:hover{color:var(--text);}
+.tabbtn.active{color:var(--accent);}
+.tabbtn.active::after{
+  content:"";position:absolute;left:14px;right:14px;bottom:0;height:2px;background:var(--accent);
+  box-shadow:0 0 8px var(--accent);
+}
+.tabbtn .n{color:var(--amber);margin-right:8px;}
+
+main{padding:36px 6vw 80px;max-width:1320px;margin:0 auto;}
+.view{display:none;animation:fadein .35s ease;}
+.view.active{display:block;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ---------- shared bits ---------- */
+.panel{
+  background:linear-gradient(180deg,var(--panel),var(--panel-3));
+  border:1px solid var(--line);
+  border-radius:3px;
+  padding:22px 24px;
+}
+.panel-title{
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin:0 0 16px;
+  display:flex;align-items:center;gap:8px;
+}
+.panel-title::before{content:"▸";color:var(--amber);}
+h2.section{
+  font-family:var(--font-display);
+  font-size:26px;
+  font-weight:600;
+  margin:0 0 6px;
+}
+p.lead{color:var(--text-dim);font-size:14.5px;line-height:1.6;max-width:800px;margin:0 0 26px;}
+
+/* ---------- THEORY ---------- */
+.theory-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-top:20px;}
+.method-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:18px 20px;
+  position:relative;
+}
+.method-card .idx{
+  font-family:var(--font-mono);font-size:11px;color:var(--amber);letter-spacing:.1em;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;
+}
+.method-card .degree-badge{
+  font-family:var(--font-mono);font-size:10px;color:var(--ink);background:var(--amber);
+  padding:2px 7px;border-radius:20px;letter-spacing:.04em;font-weight:700;
+}
+.method-card h3{font-family:var(--font-display);font-size:19px;margin:8px 0 12px;}
+.node-dots{display:flex;align-items:center;gap:5px;margin:2px 0 14px;height:14px;}
+.node-dots .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent-dim);}
+.node-dots .dot.extra{background:var(--text-dim);box-shadow:none;}
+.node-dots .dots-label{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-left:6px;}
+
+/* ---- formula blocks (shared: theory + simulator) ---- */
+.formula-label{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--text-dim);margin:14px 0 6px;display:flex;align-items:center;gap:8px;
+}
+.formula-label::after{content:"";flex:1;height:1px;background:var(--line);}
+.formula-label.err{color:var(--amber);}
+.formula-label.num{color:var(--mint);}
+.method-card .formula-label{margin-top:12px;}
+
+.formula{
+  background:var(--panel-3);
+  border:1px solid var(--line);
+  border-left:3px solid var(--accent);
+  border-radius:2px;
+  padding:16px 18px;
+  margin:0 0 4px;
+  overflow-x:auto;
+  font-size:15px;
+  position:relative;
+}
+.formula.err-box{border-left-color:var(--amber);}
+.formula.num-box{border-left-color:var(--mint);background:linear-gradient(180deg,rgba(127,224,180,0.06),var(--panel-3));}
+.formula .katex{font-size:1.22em;color:var(--text);}
+.formula.compact{padding:12px 14px;}
+.formula.compact .katex{font-size:1.02em;}
+.formula::-webkit-scrollbar{height:6px;}
+.formula::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+.formula::-webkit-scrollbar-track{background:transparent;}
+
+.method-card .meta{
+  display:flex;gap:14px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-dim);margin-top:12px;flex-wrap:wrap;
+}
+.method-card .meta b{color:var(--mint);}
+
+.card-toggle{
+  width:100%;background:transparent;border:1px dashed var(--line);color:var(--accent);
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  padding:9px 10px;border-radius:2px;cursor:pointer;margin-top:14px;
+  transition:border-color .15s,background .15s;display:flex;align-items:center;gap:8px;
+}
+.card-toggle:hover{border-color:var(--accent);background:rgba(79,209,197,0.07);}
+.card-toggle .chev{display:inline-block;transition:transform .25s ease;font-size:11px;}
+.card-toggle.open .chev{transform:rotate(90deg);}
+.card-detail{max-height:0;overflow:hidden;opacity:0;transition:max-height .38s ease, opacity .3s ease, margin-top .38s ease;}
+.card-detail.open{max-height:280px;opacity:1;margin-top:12px;}
+.mini-canvas{width:100%;height:150px;display:block;background:var(--panel-3);border:1px solid var(--line);border-radius:2px;}
+.mini-legend{display:flex;gap:14px;margin-top:8px;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);}
+.mini-caption{font-size:11.5px;color:var(--text-dim);line-height:1.55;margin:8px 0 0;}
+.mini-caption b{color:var(--text);}
+
+/* chips for current parameters in simulator formula panel */
+.param-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.chip{
+  font-family:var(--font-mono);font-size:12px;background:var(--panel-3);border:1px solid var(--line);
+  border-radius:20px;padding:5px 12px;color:var(--text-dim);
+}
+.chip b{color:var(--accent);font-weight:600;}
+
+.concept-row{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;margin-top:26px;}
+@media (max-width:880px){.concept-row{grid-template-columns:1fr;}}
+.concept-row ol{color:var(--text-dim);font-size:14.5px;line-height:1.75;padding-left:20px;}
+.concept-row li::marker{color:var(--accent);font-family:var(--font-mono);}
+.classic-box{
+  background:var(--panel-3);border:1px solid var(--line);border-radius:3px;padding:18px 20px;
+}
+.classic-box h4{font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;color:var(--amber);text-transform:uppercase;margin:0 0 10px;}
+.classic-box .formula{margin:10px 0;overflow-x:auto;}
+.classic-box .result{font-family:var(--font-mono);font-size:13px;color:var(--mint);margin-top:8px;}
+
+/* ---------- SIMULATOR ---------- */
+.sim-grid{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start;}
+@media (max-width:980px){.sim-grid{grid-template-columns:1fr;}}
+
+.field{margin-bottom:16px;}
+.field label{
+  display:block;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;
+}
+.field input, .field select{
+  width:100%;background:var(--panel-3);border:1px solid var(--line);color:var(--text);
+  font-family:var(--font-mono);font-size:14px;padding:9px 10px;border-radius:2px;
+  outline:none;
+}
+.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-dim);}
+.field .hint{font-size:11px;color:var(--text-dim);margin-top:5px;}
+.field .hint.warn{color:var(--amber);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.method-select{display:flex;flex-direction:column;gap:6px;}
+.mopt{
+  display:flex;align-items:center;gap:10px;background:var(--panel-3);border:1px solid var(--line);
+  border-radius:2px;padding:9px 10px;cursor:pointer;font-size:13px;transition:border-color .15s,background .15s;
+}
+.mopt:hover{border-color:var(--accent-dim);}
+.mopt.sel{border-color:var(--accent);background:rgba(79,209,197,0.08);}
+.mopt input{accent-color:var(--accent);}
+.mopt .lab{font-weight:500;}
+.mopt .tag{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--amber);}
+.method-divider{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text-dim);margin:10px 0 2px;border-top:1px dashed var(--line);padding-top:9px;
+}
+
+.btn{
+  width:100%;background:var(--accent);color:var(--ink);border:none;border-radius:2px;
+  font-family:var(--font-mono);font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  font-size:13px;padding:13px;cursor:pointer;margin-top:6px;transition:filter .15s, transform .1s;
+}
+.btn:hover{filter:brightness(1.1);}
+.btn:active{transform:scale(.98);}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text);}
+
+.error-box{
+  background:rgba(239,111,111,0.1);border:1px solid var(--danger);color:#ffb3b3;
+  font-family:var(--font-mono);font-size:12.5px;padding:10px 12px;border-radius:2px;margin-top:10px;display:none;
+}
+
+.readout{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-bottom:18px;
+}
+.readout .cell{background:var(--panel-3);padding:16px 18px;}
+.readout .cell .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);}
+.readout .cell .v{font-family:var(--font-mono);font-size:23px;color:var(--mint);margin-top:6px;}
+.readout .cell.err .v{color:var(--amber);}
+
+canvas{display:block;width:100%;background:var(--panel-3);border:1px solid var(--line);border-radius:3px;}
+.graph-wrap{position:relative;margin-bottom:18px;}
+.graph-legend{
+  position:absolute;top:12px;right:14px;display:flex;gap:14px;font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);
+  background:rgba(7,21,39,0.7);padding:6px 10px;border:1px solid var(--line);border-radius:2px;
+}
+.legend-dot{width:9px;height:9px;display:inline-block;border-radius:50%;margin-right:5px;vertical-align:middle;}
+
+table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12.5px;}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);}
+th:first-child,td:first-child{text-align:left;}
+thead th{color:var(--accent);font-weight:600;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;border-bottom:1px solid var(--accent-dim);}
+tbody tr:hover{background:rgba(79,209,197,0.05);}
+tfoot td{border-top:2px solid var(--accent);color:var(--mint);font-weight:600;border-bottom:none;padding-top:10px;}
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:3px;}
+
+/* comparison */
+.compare-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;margin-top:20px;}
+@media (max-width:980px){.compare-grid{grid-template-columns:1fr;}}
+
+/* ---------- EXAMPLES ---------- */
+.ex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:20px;}
+.ex-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:18px 20px;cursor:pointer;
+  transition:border-color .15s, transform .12s;
+}
+.ex-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.ex-card .tagline{font-family:var(--font-mono);font-size:10.5px;color:var(--amber);letter-spacing:.1em;text-transform:uppercase;}
+.ex-card h4{font-family:var(--font-display);font-size:17px;margin:8px 0;}
+.ex-card .fx{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);}
+.ex-card .go{font-family:var(--font-mono);font-size:11px;color:var(--accent);margin-top:12px;display:flex;align-items:center;gap:6px;}
+
+/* ---------- APLICACIONES REALES ---------- */
+.app-section{margin-top:38px;}
+.app-section:first-of-type{margin-top:0;}
+.app-cat-header{
+  display:flex;align-items:center;gap:12px;margin-bottom:6px;
+}
+.app-cat-header .cat-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.app-cat-header h3{font-family:var(--font-display);font-size:21px;font-weight:600;margin:0;}
+.app-cat-desc{color:var(--text-dim);font-size:13.5px;line-height:1.6;max-width:760px;margin:0 0 18px;}
+.app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;}
+.app-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:20px 22px;
+  border-top:3px solid var(--line);transition:border-color .15s, transform .12s;display:flex;flex-direction:column;
+}
+.app-card:hover{transform:translateY(-2px);}
+.app-card .app-tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);}
+.app-card h4{font-family:var(--font-display);font-size:17.5px;margin:8px 0 10px;}
+.app-card .app-desc{font-size:13px;color:var(--text-dim);line-height:1.6;margin:0 0 12px;flex:1;}
+.app-card .app-fx{font-family:var(--font-mono);font-size:12px;color:var(--text);background:var(--panel-3);border:1px solid var(--line);border-radius:2px;padding:8px 10px;margin-bottom:8px;overflow-x:auto;white-space:nowrap;}
+.app-card .app-ref{font-family:var(--font-mono);font-size:11px;color:var(--mint);margin-bottom:12px;}
+.app-card .go{font-family:var(--font-mono);font-size:11px;color:var(--accent);display:flex;align-items:center;gap:6px;cursor:pointer;}
+.app-card.cat-robotica{border-top-color:var(--accent);}
+.app-card.cat-informatica{border-top-color:var(--amber);}
+.app-card.cat-ia{border-top-color:var(--mint);}
+
+/* ---------- AUDIO ---------- */
+.audio-wrap{display:grid;grid-template-columns:.85fr 1.15fr;gap:24px;}
+@media (max-width:880px){.audio-wrap{grid-template-columns:1fr;}}
+.player{
+  background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:26px;
+  display:flex;flex-direction:column;align-items:center;gap:18px;
+}
+.dial{
+  width:120px;height:120px;border-radius:50%;border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;position:relative;
+}
+.dial::before{content:"";position:absolute;inset:8px;border-radius:50%;border:1px dashed var(--line);}
+.dial svg{width:40px;height:40px;fill:var(--accent);}
+.waveform{display:flex;align-items:flex-end;gap:3px;height:40px;}
+.waveform span{
+  width:4px;background:var(--accent);border-radius:2px;height:6px;
+  animation:wave 1.1s ease-in-out infinite;animation-play-state:paused;
+}
+.waveform.playing span{animation-play-state:running;}
+.waveform span:nth-child(1){animation-delay:0s;}
+.waveform span:nth-child(2){animation-delay:.1s;}
+.waveform span:nth-child(3){animation-delay:.2s;}
+.waveform span:nth-child(4){animation-delay:.3s;}
+.waveform span:nth-child(5){animation-delay:.4s;}
+.waveform span:nth-child(6){animation-delay:.3s;}
+.waveform span:nth-child(7){animation-delay:.2s;}
+.waveform span:nth-child(8){animation-delay:.1s;}
+.waveform span:nth-child(9){animation-delay:0s;}
+@keyframes wave{0%,100%{height:6px;}50%{height:34px;}}
+.player-controls{display:flex;gap:10px;width:100%;}
+.player .btn{margin-top:0;}
+.voice-select{width:100%;margin-top:6px;}
+.transcript{
+  background:var(--panel-3);border:1px solid var(--line);border-radius:3px;padding:20px 22px;
+  font-size:14.5px;line-height:1.75;color:var(--text-dim);max-height:420px;overflow-y:auto;
+}
+.transcript b{color:var(--text);}
+.transcript .word-live{color:var(--accent);background:rgba(79,209,197,.12);}
+
+footer{
+  border-top:1px solid var(--line);padding:26px 6vw;font-family:var(--font-mono);font-size:11.5px;color:var(--text-dim);
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-text">
+      <div class="eyebrow">Modelado y Simulación — UADE</div>
+      <h1>NEWTON–<span>COTES</span></h1>
+      <p class="subhead">Simulador interactivo de cuadratura numérica: interpolación polinomial, fórmulas cerradas simples y compuestas, tabla iterativa de cálculo y visualización de paneles de integración en tiempo real.</p>
+      <div class="credit">
+        <span>Cátedra: <b>Modelado y Simulación</b></span>
+        <span>·</span>
+        <span>Docente: <b>Ing. Omar Cáceres</b></span>
+        <span>·</span>
+        <span>Universidad Argentina de la Empresa (<b>UADE</b>)</span>
+      </div>
+    </div>
+
+    
+  </div>
+</header>
+
+<nav id="tabs">
+  <button class="tabbtn active" data-tab="teoria"><span class="n">01</span>Teoría</button>
+  <button class="tabbtn" data-tab="simulador"><span class="n">02</span>Simulador</button>
+  <button class="tabbtn" data-tab="ejemplos"><span class="n">03</span>Ejemplos clásicos</button>
+  <button class="tabbtn" data-tab="aplicaciones"><span class="n">04</span>Aplicaciones reales</button>
+  <button class="tabbtn" data-tab="audio"><span class="n">05</span>Resumen en audio</button>
+</nav>
+
+<main>
+
+<!-- ======================= TEORÍA ======================= -->
+<section class="view active" id="view-teoria">
+  <div class="intro-visual-row">
+    <div>
+      <h2 class="section">Fundamento teórico</h2>
+      <p class="lead" style="margin-bottom:0;">Las fórmulas de Newton–Cotes aproximan una integral definida reemplazando la función real por un polinomio interpolante de grado <i>n</i> que pasa por <i>n+1</i> puntos equiespaciados, e integrando ese polinomio de forma exacta.</p>
+    </div>
+    <div class="header-visual">
+      <div class="hv-eyebrow">Por qué importa — ingeniería estructural</div>
+      <svg class="hv-svg" viewBox="0 0 460 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Viga simplemente apoyada con carga distribuida no integrable analíticamente">
+        <defs>
+          <pattern id="hvgrid" width="18" height="18" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="1" fill="var(--line)" opacity="0.55"/>
+          </pattern>
+        </defs>
+        <rect x="0" y="0" width="460" height="190" fill="url(#hvgrid)"/>
+
+        <!-- área bajo la curva de carga -->
+        <path d="M45,140 C65,100 80,95 95,95 C110,95 125,75 140,70 C155,65 165,90 185,100 C205,110 215,130 230,125 C245,120 260,95 275,90 C290,85 305,65 320,60 C335,55 350,85 365,100 C385,115 400,130 415,135 L415,150 L45,150 Z"
+              fill="var(--amber)" opacity="0.15"/>
+        <!-- curva de carga w(x) -->
+        <path d="M45,140 C65,100 80,95 95,95 C110,95 125,75 140,70 C155,65 165,90 185,100 C205,110 215,130 230,125 C245,120 260,95 275,90 C290,85 305,65 320,60 C335,55 350,85 365,100 C385,115 400,130 415,135"
+              fill="none" stroke="var(--amber)" stroke-width="2"/>
+
+        <!-- flechas de carga hacia los nodos (muestreo tipo Newton-Cotes) -->
+        <g stroke="var(--amber)" stroke-width="1.3" opacity="0.9">
+          <line x1="95" y1="97" x2="95" y2="148"/><path d="M95,150 L91,142 L99,142 Z" fill="var(--amber)"/>
+          <line x1="140" y1="72" x2="140" y2="148"/><path d="M140,150 L136,142 L144,142 Z" fill="var(--amber)"/>
+          <line x1="185" y1="102" x2="185" y2="148"/><path d="M185,150 L181,142 L189,142 Z" fill="var(--amber)"/>
+          <line x1="230" y1="127" x2="230" y2="148"/><path d="M230,150 L226,142 L234,142 Z" fill="var(--amber)"/>
+          <line x1="275" y1="92" x2="275" y2="148"/><path d="M275,150 L271,142 L279,142 Z" fill="var(--amber)"/>
+          <line x1="320" y1="62" x2="320" y2="148"/><path d="M320,150 L316,142 L324,142 Z" fill="var(--amber)"/>
+          <line x1="365" y1="102" x2="365" y2="148"/><path d="M365,150 L361,142 L369,142 Z" fill="var(--amber)"/>
+        </g>
+
+        <!-- viga -->
+        <line x1="45" y1="150" x2="415" y2="150" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
+
+        <!-- nodos de muestreo sobre la viga -->
+        <g fill="var(--panel-3)" stroke="var(--accent)" stroke-width="1.5">
+          <circle cx="45" cy="150" r="3"/><circle cx="95" cy="150" r="3"/><circle cx="140" cy="150" r="3"/>
+          <circle cx="185" cy="150" r="3"/><circle cx="230" cy="150" r="3"/><circle cx="275" cy="150" r="3"/>
+          <circle cx="320" cy="150" r="3"/><circle cx="365" cy="150" r="3"/><circle cx="415" cy="150" r="3"/>
+        </g>
+
+        <!-- apoyo fijo (izquierda) -->
+        <path d="M45,150 L33,172 L57,172 Z" fill="var(--panel-3)" stroke="var(--accent)" stroke-width="1.6"/>
+        <g stroke="var(--accent)" stroke-width="1.1" opacity="0.7">
+          <line x1="26" y1="176" x2="64" y2="176"/>
+          <line x1="30" y1="176" x2="24" y2="182"/><line x1="38" y1="176" x2="32" y2="182"/>
+          <line x1="46" y1="176" x2="40" y2="182"/><line x1="54" y1="176" x2="48" y2="182"/>
+          <line x1="62" y1="176" x2="56" y2="182"/>
+        </g>
+
+        <!-- apoyo móvil (derecha) -->
+        <circle cx="415" cy="163" r="7.5" fill="var(--panel-3)" stroke="var(--accent)" stroke-width="1.6"/>
+        <line x1="415" y1="150" x2="415" y2="155.5" stroke="var(--accent)" stroke-width="1.6"/>
+        <g stroke="var(--accent)" stroke-width="1.1" opacity="0.7">
+          <line x1="397" y1="176" x2="433" y2="176"/>
+          <line x1="401" y1="176" x2="395" y2="182"/><line x1="409" y1="176" x2="403" y2="182"/>
+          <line x1="417" y1="176" x2="411" y2="182"/><line x1="425" y1="176" x2="419" y2="182"/>
+          <line x1="433" y1="176" x2="427" y2="182"/>
+        </g>
+
+        <!-- cota -->
+        <g stroke="var(--mint)" stroke-width="1" opacity="0.85">
+          <line x1="45" y1="185" x2="45" y2="180"/>
+          <line x1="415" y1="185" x2="415" y2="180"/>
+          <line x1="45" y1="183" x2="415" y2="183"/>
+        </g>
+        <text x="230" y="197" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="var(--mint)">L</text>
+
+        <text x="52" y="52" font-family="'JetBrains Mono',monospace" font-size="11" fill="var(--amber)">w(x)</text>
+        <text x="322" y="42" font-family="'JetBrains Mono',monospace" font-size="9" fill="var(--text-dim)">carga distribuida</text>
+      </svg>
+
+      <div class="hv-caption">
+        <div class="hv-line"><span class="hv-tag">carga w(x)</span><span class="hv-eq" id="hv-eq1"></span></div>
+        <div class="hv-line"><span class="hv-tag">momento M(x)</span><span class="hv-eq" id="hv-eq2"></span></div>
+        <p class="hv-note">La carga <span class="mono">w(x)</span> combina un seno, una exponencial y una raíz en el denominador: <b>no tiene primitiva elemental</b>. El momento flector —y la deflexión de la viga— sólo pueden evaluarse por cuadratura numérica: el problema que resuelve este simulador.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-row">
+    <div>
+      <div class="panel-title">Idea general</div>
+      <ol>
+        <li>Se divide <span class="mono">[a,b]</span> en <span class="mono">n</span> subintervalos de ancho <span class="mono">h = (b−a)/n</span>, generando los nodos <span class="mono">x₀, x₁, …, xₙ</span>.</li>
+        <li>Se interpola <span class="mono">f(x)</span> con un polinomio de Lagrange que pasa exactamente por esos nodos.</li>
+        <li>Se integra el polinomio en forma cerrada, obteniendo pesos fijos (coeficientes) que multiplican a cada <span class="mono">f(xᵢ)</span>.</li>
+        <li>Las fórmulas <b style="color:var(--text)">simples</b> usan un único polinomio en todo el intervalo. Las <b style="color:var(--text)">compuestas</b> repiten un panel de bajo orden sobre varios subintervalos, reduciendo el error.</li>
+      </ol>
+    </div>
+    <div class="classic-box">
+      <h4>Error de truncamiento</h4>
+      <p style="font-size:13.5px;color:var(--text-dim);margin:0 0 10px;">El error depende de una derivada de orden superior de <i>f</i> evaluada en un punto <span class="mono">ξ ∈ [a,b]</span> desconocido — por eso se lo llama error de truncamiento local.</p>
+      <div class="formula" id="k-error-general"></div>
+      <p style="font-size:12.5px;color:var(--text-dim);margin-top:10px;">A mayor grado del polinomio, mayor orden de error (más rápida convergencia), pero también mayor sensibilidad a oscilaciones (fenómeno de Runge) para <i>n</i> muy grande en fórmulas simples — de ahí la preferencia por versiones <b style="color:var(--text)">compuestas</b>.</p>
+    </div>
+  </div>
+
+  <div class="panel-title" style="margin-top:34px;">Familia de fórmulas cerradas</div>
+  <div class="theory-grid" id="theory-cards"></div>
+
+  <div class="panel-title" style="margin-top:38px;">Cuadratura de Gauss–Legendre — una familia distinta</div>
+  <p class="lead">Newton–Cotes fija los nodos equiespaciados y solo optimiza los pesos. Gauss–Legendre va un paso más allá: elige <b style="color:var(--text)">tanto la ubicación de los nodos como los pesos</b> para maximizar la exactitud. Con <span class="mono">n</span> puntos (no equiespaciados), logra ser exacta para polinomios de grado <span class="mono">2n−1</span> — el doble que un Newton-Cotes con la misma cantidad de nodos.</p>
+  <div class="theory-grid" id="gauss-theory-card" style="grid-template-columns:1fr;max-width:640px;"></div>
+</section>
+
+<!-- ======================= SIMULADOR ======================= -->
+<section class="view" id="view-simulador">
+  <h2 class="section">Simulador de cuadratura</h2>
+  <p class="lead">Configurá la función, el intervalo y el método. El simulador arma la tabla de iteración nodo a nodo y dibuja los paneles polinomiales usados para aproximar el área.</p>
+
+  <div class="sim-grid">
+    <!-- CONTROL PANEL -->
+    <div class="panel">
+      <div class="panel-title">Panel de control</div>
+
+      <div class="field">
+        <label for="fx-input">f(x)</label>
+        <input id="fx-input" type="text" value="x^2 - 2*x + 2" spellcheck="false">
+        <div class="hint">Sintaxis: <span class="mono">^ + - * /</span>, funciones <span class="mono">sin cos tan exp log sqrt</span>, constante <span class="mono">pi</span>.</div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="a-input">Límite a</label>
+          <input id="a-input" type="text" value="0">
+        </div>
+        <div class="field">
+          <label for="b-input">Límite b</label>
+          <input id="b-input" type="text" value="4">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Método de Newton–Cotes</label>
+        <div class="method-select" id="method-select"></div>
+      </div>
+
+      <div class="field" id="n-field">
+        <label for="n-input" id="n-label">Subintervalos (n)</label>
+        <input id="n-input" type="number" value="4" min="1" step="1">
+        <div class="hint" id="n-hint">Trapecio compuesto acepta cualquier n ≥ 1.</div>
+      </div>
+
+      <button class="btn" id="calc-btn">Calcular integral</button>
+      <button class="btn ghost" id="anim-btn" style="margin-top:8px;">▸ Reproducir animación de paneles</button>
+      <div class="error-box" id="error-box"></div>
+    </div>
+
+    <!-- RESULTS -->
+    <div>
+      <div class="readout" id="readout">
+        <div class="cell"><div class="k">I aproximada</div><div class="v" id="out-I">—</div></div>
+        <div class="cell"><div class="k">Referencia numérica</div><div class="v" id="out-ref">—</div></div>
+        <div class="cell err"><div class="k">Error absoluto</div><div class="v" id="out-err">—</div></div>
+      </div>
+
+      <div class="graph-wrap">
+        <canvas id="graph" height="420"></canvas>
+        <div class="graph-legend">
+          <span><span class="legend-dot" style="background:var(--accent)"></span>f(x)</span>
+          <span><span class="legend-dot" style="background:var(--amber)"></span>panel par</span>
+          <span><span class="legend-dot" style="background:var(--mint)"></span>panel impar</span>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:18px;">
+        <div class="panel-title">Fórmula aplicada</div>
+        <div class="param-chips" id="param-chips"></div>
+        <div id="formula-display"></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:18px;">
+        <div class="panel-title">Tabla iterativa</div>
+        <div class="table-scroll">
+          <table id="iter-table">
+            <thead><tr><th>i</th><th>xᵢ</th><th>f(xᵢ)</th><th>coef. cᵢ</th><th>término</th></tr></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="compare-grid">
+        <div class="panel">
+          <div class="panel-title">Comparación entre métodos</div>
+          <div class="table-scroll">
+            <table id="compare-table">
+              <thead><tr><th>Método</th><th>n</th><th>I</th><th>Error abs.</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Error por método (escala log)</div>
+          <canvas id="bar-chart" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= EJEMPLOS ======================= -->
+<section class="view" id="view-ejemplos">
+  <h2 class="section">Ejemplos clásicos</h2>
+  <p class="lead">Casos de referencia de la bibliografía estándar de métodos numéricos (Chapra &amp; Canale, entre otros). Elegí uno para cargarlo automáticamente en el simulador.</p>
+  <div class="ex-grid" id="ex-grid"></div>
+</section>
+
+<!-- ======================= APLICACIONES REALES ======================= -->
+<section class="view" id="view-aplicaciones">
+  <div class="intro-visual-row">
+    <div>
+      <h2 class="section">Aplicaciones en el mundo real</h2>
+      <p class="lead" style="margin-bottom:0;">La cuadratura numérica no es solo un ejercicio académico: aparece constantemente en robótica, sistemas informáticos e inteligencia artificial, siempre que hay que integrar una señal, una curva o una densidad de probabilidad que no tiene primitiva elemental o que solo se conoce por muestras.</p>
+    </div>
+    <div class="header-visual">
+      <div class="hv-eyebrow">Por qué importa — robótica e IA</div>
+      <svg class="hv-svg" viewBox="0 0 460 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Brazo robótico controlado por una red neuronal, con trayectoria muestreada e integral de valor esperado">
+        <defs>
+          <pattern id="hvgrid2" width="18" height="18" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="1" fill="var(--line)" opacity="0.55"/>
+          </pattern>
+        </defs>
+        <rect x="0" y="0" width="460" height="190" fill="url(#hvgrid2)"/>
+
+        <!-- base fija del brazo -->
+        <path d="M55,150 L43,172 L67,172 Z" fill="var(--panel-3)" stroke="var(--accent)" stroke-width="1.6"/>
+        <g stroke="var(--accent)" stroke-width="1.1" opacity="0.7">
+          <line x1="36" y1="176" x2="74" y2="176"/>
+          <line x1="40" y1="176" x2="34" y2="182"/><line x1="48" y1="176" x2="42" y2="182"/>
+          <line x1="56" y1="176" x2="50" y2="182"/><line x1="64" y1="176" x2="58" y2="182"/>
+          <line x1="72" y1="176" x2="66" y2="182"/>
+        </g>
+
+        <!-- eslabones del brazo -->
+        <line x1="55" y1="150" x2="128" y2="88" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/>
+        <line x1="128" y1="88" x2="200" y2="58" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/>
+
+        <!-- arcos de ángulo articular -->
+        <path d="M55,132 A18,18 0 0,1 70,120" fill="none" stroke="var(--mint)" stroke-width="1.3" opacity="0.85"/>
+        <text x="76" y="128" font-family="'JetBrains Mono',monospace" font-size="10" fill="var(--mint)">θ₁</text>
+        <path d="M116,95 A14,14 0 0,1 130,74" fill="none" stroke="var(--mint)" stroke-width="1.3" opacity="0.85"/>
+        <text x="134" y="76" font-family="'JetBrains Mono',monospace" font-size="10" fill="var(--mint)">θ₂</text>
+
+        <!-- articulaciones -->
+        <circle cx="55" cy="150" r="5" fill="var(--panel-3)" stroke="var(--accent)" stroke-width="1.8"/>
+        <circle cx="128" cy="88" r="5" fill="var(--panel-3)" stroke="var(--accent)" stroke-width="1.8"/>
+        <circle cx="200" cy="58" r="4.5" fill="var(--panel-3)" stroke="var(--accent)" stroke-width="1.8"/>
+
+        <!-- trayectoria muestreada del efector final -->
+        <path d="M200,58 C220,68 238,88 250,112 C256,124 258,136 254,146" fill="none" stroke="var(--mint)" stroke-width="1.6" stroke-dasharray="1 4" opacity="0.9"/>
+        <g fill="var(--panel-3)" stroke="var(--mint)" stroke-width="1.3">
+          <circle cx="200" cy="58" r="2.6"/><circle cx="223" cy="72" r="2.6"/><circle cx="242" cy="94" r="2.6"/>
+          <circle cx="252" cy="119" r="2.6"/><circle cx="254" cy="146" r="2.6"/>
+        </g>
+        <text x="205" y="42" font-family="'JetBrains Mono',monospace" font-size="9" fill="var(--mint)">trayectoria muestreada</text>
+
+        <!-- divisor sutil -->
+        <line x1="278" y1="18" x2="278" y2="172" stroke="var(--line)" stroke-width="1" stroke-dasharray="2 4" opacity="0.6"/>
+
+        <!-- red neuronal (política) -->
+        <g stroke="var(--accent)" stroke-width="0.9" opacity="0.4">
+          <line x1="303" y1="45" x2="352" y2="30"/><line x1="303" y1="45" x2="352" y2="65"/><line x1="303" y1="45" x2="352" y2="100"/><line x1="303" y1="45" x2="352" y2="135"/>
+          <line x1="303" y1="88" x2="352" y2="30"/><line x1="303" y1="88" x2="352" y2="65"/><line x1="303" y1="88" x2="352" y2="100"/><line x1="303" y1="88" x2="352" y2="135"/>
+          <line x1="303" y1="131" x2="352" y2="30"/><line x1="303" y1="131" x2="352" y2="65"/><line x1="303" y1="131" x2="352" y2="100"/><line x1="303" y1="131" x2="352" y2="135"/>
+          <line x1="352" y1="30" x2="401" y2="58"/><line x1="352" y1="65" x2="401" y2="58"/><line x1="352" y1="100" x2="401" y2="58"/><line x1="352" y1="135" x2="401" y2="58"/>
+          <line x1="352" y1="30" x2="401" y2="118"/><line x1="352" y1="65" x2="401" y2="118"/><line x1="352" y1="100" x2="401" y2="118"/><line x1="352" y1="135" x2="401" y2="118"/>
+        </g>
+        <g fill="var(--panel-3)" stroke="var(--mint)" stroke-width="1.5">
+          <circle cx="303" cy="45" r="5"/><circle cx="303" cy="88" r="5"/><circle cx="303" cy="131" r="5"/>
+        </g>
+        <g fill="var(--panel-3)" stroke="var(--accent)" stroke-width="1.5">
+          <circle cx="352" cy="30" r="5"/><circle cx="352" cy="65" r="5"/><circle cx="352" cy="100" r="5"/><circle cx="352" cy="135" r="5"/>
+        </g>
+        <g fill="var(--panel-3)" stroke="var(--amber)" stroke-width="1.8">
+          <circle cx="401" cy="58" r="5.5"/><circle cx="401" cy="118" r="5.5"/>
+        </g>
+        <text x="303" y="26" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="var(--mint)">s</text>
+        <text x="401" y="26" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="var(--amber)">τ(θ)</text>
+        <text x="352" y="150" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="var(--text-dim)">política π</text>
+
+        <!-- flecha de accion hacia el brazo -->
+        <path d="M395,90 C340,95 260,90 210,70" fill="none" stroke="var(--amber)" stroke-width="1.4" stroke-dasharray="1 3" opacity="0.8"/>
+        <path d="M210,70 L217,66 L214,76 Z" fill="var(--amber)"/>
+      </svg>
+
+      <div class="hv-caption">
+        <div class="hv-line"><span class="hv-tag">valor Vᵖ(s)</span><span class="hv-eq" id="hv-eq3"></span></div>
+        <div class="hv-line"><span class="hv-tag">trabajo W</span><span class="hv-eq" id="hv-eq4"></span></div>
+        <p class="hv-note">La política (red neuronal) del robot elige una acción <span class="mono">τ</span> a partir del estado <span class="mono">s</span>. Evaluar qué tan buena es esa política exige <b>integrar sobre todos los estados posibles</b> — otra integral sin forma cerrada, resuelta con cuadratura o Monte Carlo.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-section" id="app-robotica"></div>
+  <div class="app-section" id="app-informatica"></div>
+  <div class="app-section" id="app-ia"></div>
+</section>
+
+<!-- ======================= AUDIO ======================= -->
+<section class="view" id="view-audio">
+  <h2 class="section">Resumen en audio</h2>
+  <p class="lead">Síntesis de voz en el navegador con un repaso breve del método. También podés escuchar el resultado de tu último cálculo en el simulador.</p>
+
+  <div class="audio-wrap">
+    <div class="player">
+      <div class="dial" id="dial">
+        <svg viewBox="0 0 24 24" id="dial-icon"><path d="M8 5v14l11-7z"/></svg>
+      </div>
+      <div class="waveform" id="waveform">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="player-controls">
+        <button class="btn" id="play-btn" style="flex:2;">▸ Reproducir resumen</button>
+        <button class="btn ghost" id="stop-btn" style="flex:1;">■ Detener</button>
+      </div>
+      <button class="btn ghost" id="play-result-btn">▸ Escuchar último resultado</button>
+      <div class="field voice-select">
+        <label for="voice-select">Voz</label>
+        <select id="voice-select"></select>
+      </div>
+    </div>
+
+    <div class="transcript" id="transcript"></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>Newton–Cotes · Simulador interactivo — construido para fines didácticos</span>
+  <span>Ing. Omar Cáceres · Modelado y Simulación · UADE · 2026</span>
+</footer>
+
+<script>
+/* ============================================================
+   NEWTON–COTES SIMULATOR — CORE LOGIC
+   ============================================================ */
+
+/* ---------- TABS ---------- */
+document.querySelectorAll('.tabbtn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ---------- KATEX HELPER ---------- */
+function K(el, tex, display){
+  try{ katex.render(tex, el, {throwOnError:false, displayMode:!!display}); }
+  catch(e){ el.textContent = tex; }
+}
+
+/* header illustration equations */
+K(document.getElementById('hv-eq1'),
+  'w(x) = q_0\\,\\dfrac{\\sin\\!\\left(\\frac{\\pi x}{L}\\right)e^{-x/(2L)}}{\\sqrt{1+0.3\\cos^2\\!\\left(\\frac{\\pi x}{L}\\right)}}', false);
+K(document.getElementById('hv-eq2'),
+  'M(x)=\\displaystyle\\int_0^{x} w(s)\\,(x-s)\\,ds', false);
+K(document.getElementById('hv-eq3'),
+  "V^{\\pi}(s)=\\displaystyle\\int_{\\mathcal S} V^{\\pi}(s')\\,p(s'\\!\\mid\\! s)\\,ds'", false);
+K(document.getElementById('hv-eq4'),
+  'W=\\displaystyle\\int_0^{\\Delta\\theta} \\tau(\\theta)\\,d\\theta', false);
+
+/* ============================================================
+   QUADRATURE ENGINES
+   ============================================================ */
+function sampleNodes(f,a,b,n){
+  const h=(b-a)/n, xs=[], fs=[];
+  for(let i=0;i<=n;i++){ const x=a+i*h; xs.push(x); fs.push(f(x)); }
+  return {h,xs,fs};
+}
+
+function trapComposite(f,a,b,n){
+  const {h,xs,fs}=sampleNodes(f,a,b,n);
+  const coeffs = xs.map((_,i)=> (i===0||i===n)?1:2);
+  const factor = h/2;
+  const rows = xs.map((x,i)=>({i,x,fx:fs[i],coef:coeffs[i],term:coeffs[i]*fs[i]*factor}));
+  const I = rows.reduce((s,r)=>s+r.term,0);
+  const panels=[]; for(let i=0;i<n;i++) panels.push([i,i+1]);
+  return {h,I,xs,fs,rows,panels,factorLabel:'h/2', sumLabel:'coeficientes: 1,2,2,…,2,1'};
+}
+
+function simpson13Composite(f,a,b,n){
+  const {h,xs,fs}=sampleNodes(f,a,b,n);
+  const coeffs = xs.map((_,i)=> (i===0||i===n)?1:(i%2===1?4:2));
+  const factor = h/3;
+  const rows = xs.map((x,i)=>({i,x,fx:fs[i],coef:coeffs[i],term:coeffs[i]*fs[i]*factor}));
+  const I = rows.reduce((s,r)=>s+r.term,0);
+  const panels=[]; for(let i=0;i<n;i+=2) panels.push([i,i+1,i+2]);
+  return {h,I,xs,fs,rows,panels,factorLabel:'h/3', sumLabel:'coeficientes: 1,4,2,4,…,4,1'};
+}
+
+function simpson38Composite(f,a,b,n){
+  const {h,xs,fs}=sampleNodes(f,a,b,n);
+  const coeffs = xs.map((_,i)=> (i===0||i===n)?1:(i%3===0?2:3));
+  const factor = 3*h/8;
+  const rows = xs.map((x,i)=>({i,x,fx:fs[i],coef:coeffs[i],term:coeffs[i]*fs[i]*factor}));
+  const I = rows.reduce((s,r)=>s+r.term,0);
+  const panels=[]; for(let i=0;i<n;i+=3) panels.push([i,i+1,i+2,i+3]);
+  return {h,I,xs,fs,rows,panels,factorLabel:'3h/8', sumLabel:'coeficientes: 1,3,3,2,3,3,2,…,3,3,1'};
+}
+
+function booleSimple(f,a,b){
+  const n=4;
+  const {h,xs,fs}=sampleNodes(f,a,b,n);
+  const coeffs=[7,32,12,32,7];
+  const factor = 2*h/45;
+  const rows = xs.map((x,i)=>({i,x,fx:fs[i],coef:coeffs[i],term:coeffs[i]*fs[i]*factor}));
+  const I = rows.reduce((s,r)=>s+r.term,0);
+  const panels=[[0,1,2,3,4]];
+  return {h,I,xs,fs,rows,panels,factorLabel:'2h/45', sumLabel:'coeficientes: 7,32,12,32,7'};
+}
+
+/* ---------- Gauss–Legendre quadrature (distinct family: optimal, non-uniform nodes) ---------- */
+const GAUSS_TABLE = {
+  1:{nodes:[0], weights:[2]},
+  2:{nodes:[-0.5773502691896257, 0.5773502691896257], weights:[1, 1]},
+  3:{nodes:[-0.7745966692414834, 0, 0.7745966692414834], weights:[0.5555555555555556, 0.8888888888888888, 0.5555555555555556]},
+  4:{nodes:[-0.8611363115940526,-0.3399810435848563, 0.3399810435848563, 0.8611363115940526],
+     weights:[0.3478548451374538, 0.6521451548625461, 0.6521451548625461, 0.3478548451374538]},
+  5:{nodes:[-0.9061798459386640,-0.5384693101056831, 0, 0.5384693101056831, 0.9061798459386640],
+     weights:[0.2369268850561891, 0.4786286704993665, 0.5688888888888889, 0.4786286704993665, 0.2369268850561891]}
+};
+function gaussLegendre(f,a,b,nPoints){
+  const table = GAUSS_TABLE[nPoints] || GAUSS_TABLE[3];
+  const c1=(b-a)/2, c2=(a+b)/2;
+  const xs=[],fs=[],rows=[];
+  let I=0;
+  table.nodes.forEach((xi,i)=>{
+    const x = c1*xi + c2;
+    const fx = f(x);
+    const w = table.weights[i]*c1;
+    xs.push(x); fs.push(fx);
+    const term = w*fx;
+    I += term;
+    rows.push({i, x, fx, coef:w, term});
+  });
+  const panels = [ Array.from({length:table.nodes.length}, (_,i)=>i) ];
+  return {h:(b-a)/table.nodes.length, I, xs, fs, rows, panels,
+    factorLabel:'Σ wᵢ·f(xᵢ)', sumLabel:`pesos y nodos óptimos de Gauss–Legendre (n=${table.nodes.length})`,
+    isGauss:true};
+}
+
+/* reference (fine composite Simpson 1/3) */
+function referenceIntegral(f,a,b){
+  const n=4000;
+  try{
+    const r = simpson13Composite(f,a,b,n);
+    return r.I;
+  }catch(e){ return NaN; }
+}
+
+/* ============================================================
+   METHODS METADATA
+   ============================================================ */
+const METHODS = {
+  trap_simple:{ label:'Trapecio simple', tag:'n=1', fixedN:1, run:(f,a,b,n)=>trapComposite(f,a,b,1),
+    formula:'I \\approx \\frac{h}{2}\\left[f(x_0)+f(x_1)\\right]',
+    error:'E_t=-\\frac{(b-a)^3}{12}\\,f\'\'(\\xi)'},
+  trap_comp:{ label:'Trapecio compuesto', tag:'n≥1', fixedN:null, minN:1, validN:n=>n>=1,
+    run:(f,a,b,n)=>trapComposite(f,a,b,n),
+    formula:'I \\approx \\frac{h}{2}\\left[f_0+2\\sum_{i=1}^{n-1}f_i+f_n\\right]',
+    error:'E_t=-\\frac{(b-a)h^2}{12}\\,f\'\'(\\xi)'},
+  simpson13_simple:{ label:'Simpson 1/3 simple', tag:'n=2', fixedN:2, run:(f,a,b,n)=>simpson13Composite(f,a,b,2),
+    formula:'I \\approx \\frac{h}{3}\\left[f_0+4f_1+f_2\\right]',
+    error:'E_t=-\\frac{(b-a)^5}{2880}\\,f^{(4)}(\\xi)'},
+  simpson13_comp:{ label:'Simpson 1/3 compuesto', tag:'n par', fixedN:null, minN:2, validN:n=>n>=2 && n%2===0,
+    run:(f,a,b,n)=>simpson13Composite(f,a,b,n),
+    formula:'I \\approx \\frac{h}{3}\\Big[f_0+4\\big(f_1+f_3+\\cdots+f_{n-1}\\big)+2\\big(f_2+f_4+\\cdots+f_{n-2}\\big)+f_n\\Big]',
+    error:'E_t=-\\frac{(b-a)\\,h^4}{180}\\,f^{(4)}(\\xi)'},
+  simpson38_simple:{ label:'Simpson 3/8 simple', tag:'n=3', fixedN:3, run:(f,a,b,n)=>simpson38Composite(f,a,b,3),
+    formula:'I \\approx \\frac{3h}{8}\\left[f_0+3f_1+3f_2+f_3\\right]',
+    error:'E_t=-\\frac{3h^5}{80}\\,f^{(4)}(\\xi),\\quad h=\\frac{b-a}{3}'},
+  simpson38_comp:{ label:'Simpson 3/8 compuesto', tag:'n múlt. 3', fixedN:null, minN:3, validN:n=>n>=3 && n%3===0,
+    run:(f,a,b,n)=>simpson38Composite(f,a,b,n),
+    formula:'I \\approx \\frac{3h}{8}\\sum_{k=0}^{m-1}\\Big[f_{3k}+3f_{3k+1}+3f_{3k+2}+f_{3k+3}\\Big],\\quad m=\\frac{n}{3}',
+    error:'E_t=-\\frac{(b-a)\\,h^4}{80}\\,f^{(4)}(\\xi)'},
+  boole_simple:{ label:'Boole simple', tag:'n=4', fixedN:4, run:(f,a,b,n)=>booleSimple(f,a,b),
+    formula:'I \\approx \\frac{2h}{45}\\left[7f_0+32f_1+12f_2+32f_3+7f_4\\right]',
+    error:'E_t=-\\frac{8h^7}{945}\\,f^{(6)}(\\xi),\\quad h=\\frac{b-a}{4}'},
+  gauss_legendre:{ label:'Gauss–Legendre', tag:'1–5 puntos', fixedN:null, minN:1, maxN:5,
+    validN:n=>Number.isInteger(n) && n>=1 && n<=5,
+    run:(f,a,b,n)=>gaussLegendre(f,a,b,n),
+    formula:'I \\approx \\sum_{i=1}^{n} w_i\\,f(x_i)',
+    error:'E_n=\\frac{2^{2n+1}(n!)^4}{(2n+1)\\,[(2n)!]^3}\\,f^{(2n)}(\\xi),\\;\\;\\xi\\in(-1,1)',
+    isGauss:true}
+};
+const METHOD_ORDER = ['trap_simple','trap_comp','simpson13_simple','simpson13_comp','simpson38_simple','simpson38_comp','boole_simple'];
+const GAUSS_KEY = 'gauss_legendre';
+const COMPARE_ORDER = [...METHOD_ORDER, GAUSS_KEY];
+
+const DEGREE = {
+  trap_simple:1, trap_comp:1,
+  simpson13_simple:2, simpson13_comp:2,
+  simpson38_simple:3, simpson38_comp:3,
+  boole_simple:4
+};
+const DEGREE_LABEL = {1:'lineal (grado 1)',2:'cuadrático (grado 2)',3:'cúbico (grado 3)',4:'cuártico (grado 4)'};
+
+/* builds the numeric-substitution TeX for the "fórmula aplicada" panel */
+const FACTOR_TEX = {
+  'h/2':  h => `\\dfrac{${fmt(h,4)}}{2}`,
+  'h/3':  h => `\\dfrac{${fmt(h,4)}}{3}`,
+  '3h/8': h => `\\dfrac{3(${fmt(h,4)})}{8}`,
+  '2h/45':h => `\\dfrac{2(${fmt(h,4)})}{45}`
+};
+function buildSubstitutionTex(result){
+  if(result.isGauss){
+    const termsTex = result.rows.map(r => `(${fmt(r.coef,4)})(${fmt(r.fx,3)})`).join(' + ');
+    return `I \\approx ${termsTex} = ${fmt(result.I,5)}`;
+  }
+  const factorFn = FACTOR_TEX[result.factorLabel];
+  const factorTex = factorFn ? factorFn(result.h) : result.factorLabel;
+  const termsTex = result.rows.map(r=>{
+    const v = fmt(r.fx,3);
+    return r.coef===1 ? v : `${r.coef}(${v})`;
+  }).join(' + ');
+  return `I \\approx ${factorTex}\\Big[${termsTex}\\Big] = ${fmt(result.I,5)}`;
+}
+
+/* ============================================================
+   THEORY TAB — render cards
+   ============================================================ */
+K(document.getElementById('k-error-general'), 'E = \\int_a^b f(x)\\,dx - \\int_a^b P_n(x)\\,dx \\;\\propto\\; h^{p+1} f^{(p+1)}(\\xi)', true);
+
+const thGrid = document.getElementById('theory-cards');
+METHOD_ORDER.forEach((key,idx)=>{
+  const m = METHODS[key];
+  const deg = DEGREE[key];
+  const card = document.createElement('div');
+  card.className='method-card';
+
+  let dotsHtml;
+  if(m.fixedN){
+    dotsHtml = Array.from({length:m.fixedN+1}).map(()=>'<span class="dot"></span>').join('')
+      + `<span class="dots-label">${m.fixedN+1} nodos</span>`;
+  } else {
+    dotsHtml = '<span class="dot"></span><span class="dot"></span><span class="dot extra"></span><span class="dot extra"></span>'
+      + `<span class="dots-label">n+1 nodos (repetido)</span>`;
+  }
+
+  card.innerHTML = `
+    <div class="idx">
+      <span>${String(idx+1).padStart(2,'0')} · ${key.includes('simple')?'FÓRMULA SIMPLE':'FÓRMULA COMPUESTA'}</span>
+      <span class="degree-badge">${DEGREE_LABEL[deg]}</span>
+    </div>
+    <h3>${m.label}</h3>
+    <div class="node-dots">${dotsHtml}</div>
+
+    <div class="formula-label">Fórmula</div>
+    <div class="formula compact" id="th-f-${key}"></div>
+
+    <div class="formula-label err">Error de truncamiento</div>
+    <div class="formula compact err-box" id="th-e-${key}"></div>
+
+    <div class="meta"><span>Nodos: <b>${m.fixedN? m.fixedN+1 : 'n+1'}</b></span><span>Tipo: <b>${m.tag}</b></span></div>
+
+    <button class="card-toggle" data-key="${key}"><span class="chev">▸</span><span class="label">Ver cómo el polinomio divide el área</span></button>
+    <div class="card-detail" id="detail-${key}">
+      <canvas class="mini-canvas" id="mini-${key}"></canvas>
+      <div class="mini-legend">
+        <span><span class="legend-dot" style="background:var(--accent)"></span>f(x) real</span>
+        <span><span class="legend-dot" style="background:var(--amber)"></span>panel ${idx%2===0?'1,3,5…':'par'}</span>
+        <span><span class="legend-dot" style="background:var(--mint)"></span>panel alternado</span>
+      </div>
+      <p class="mini-caption">Sobre una curva de ejemplo, cada tramo sombreado es el <b>polinomio de grado ${deg}</b> que reemplaza a f(x) en ese panel — el área bajo esos polinomios es lo que suma la fórmula.</p>
+    </div>
+  `;
+  thGrid.appendChild(card);
+  K(document.getElementById(`th-f-${key}`), m.formula, true);
+  K(document.getElementById(`th-e-${key}`), m.error, true);
+
+  const toggleBtn = card.querySelector('.card-toggle');
+  const detail = card.querySelector('.card-detail');
+  toggleBtn.addEventListener('click', ()=>{
+    const isOpen = detail.classList.toggle('open');
+    toggleBtn.classList.toggle('open', isOpen);
+    toggleBtn.querySelector('.label').textContent = isOpen ? 'Ocultar visualización' : 'Ver cómo el polinomio divide el área';
+    if(isOpen){
+      requestAnimationFrame(()=> drawMiniQuadrature(document.getElementById(`mini-${key}`), key));
+    }
+  });
+});
+
+/* ---------- Gauss–Legendre theory card (separate family) ---------- */
+{
+  const gm = METHODS[GAUSS_KEY];
+  const gCard = document.createElement('div');
+  gCard.className = 'method-card';
+  gCard.innerHTML = `
+    <div class="idx">
+      <span>G · FÓRMULA ÓPTIMA (NO NEWTON–COTES)</span>
+      <span class="degree-badge">exactitud 2n−1</span>
+    </div>
+    <h3>${gm.label}</h3>
+    <div class="node-dots">
+      <span class="dot"></span><span class="dot"></span><span class="dot extra"></span><span class="dot extra"></span><span class="dot extra"></span>
+      <span class="dots-label">n nodos, ubicados en las raíces del polinomio de Legendre Pₙ (no equiespaciados)</span>
+    </div>
+
+    <div class="formula-label">Fórmula</div>
+    <div class="formula compact" id="th-f-gauss"></div>
+
+    <div class="formula-label err">Error de truncamiento</div>
+    <div class="formula compact err-box" id="th-e-gauss"></div>
+
+    <div class="meta"><span>Nodos: <b>n (parametrizable, 1–5)</b></span><span>Tipo: <b>${gm.tag}</b></span></div>
+
+    <button class="card-toggle" data-key="${GAUSS_KEY}"><span class="chev">▸</span><span class="label">Ver cómo el polinomio divide el área</span></button>
+    <div class="card-detail" id="detail-gauss">
+      <canvas class="mini-canvas" id="mini-gauss"></canvas>
+      <div class="mini-legend">
+        <span><span class="legend-dot" style="background:var(--accent)"></span>f(x) real</span>
+        <span><span class="legend-dot" style="background:var(--amber)"></span>polinomio por Gauss (4 pts)</span>
+      </div>
+      <p class="mini-caption">Con solo <b>4 nodos</b>, elegidos donde más aportan (no en los extremos ni equiespaciados), un único polinomio de grado 3 ya captura la curva casi a la perfección — por eso Gauss necesita menos nodos que Simpson para el mismo error.</p>
+    </div>
+  `;
+  document.getElementById('gauss-theory-card').appendChild(gCard);
+  K(document.getElementById('th-f-gauss'), gm.formula, true);
+  K(document.getElementById('th-e-gauss'), gm.error, true);
+
+  const gToggle = gCard.querySelector('.card-toggle');
+  const gDetail = gCard.querySelector('.card-detail');
+  gToggle.addEventListener('click', ()=>{
+    const isOpen = gDetail.classList.toggle('open');
+    gToggle.classList.toggle('open', isOpen);
+    gToggle.querySelector('.label').textContent = isOpen ? 'Ocultar visualización' : 'Ver cómo el polinomio divide el área';
+    if(isOpen){
+      requestAnimationFrame(()=> drawMiniQuadrature(document.getElementById('mini-gauss'), GAUSS_KEY));
+    }
+  });
+}
+
+/* ============================================================
+   SIMULATOR — controls
+   ============================================================ */
+const fxInput = document.getElementById('fx-input');
+const aInput = document.getElementById('a-input');
+const bInput = document.getElementById('b-input');
+const nInput = document.getElementById('n-input');
+const nField = document.getElementById('n-field');
+const nHint = document.getElementById('n-hint');
+const errorBox = document.getElementById('error-box');
+const methodSelectEl = document.getElementById('method-select');
+
+let currentMethod = 'trap_comp';
+let lastResult = null; // for audio "last result"
+
+function buildMethodOption(key){
+  const m = METHODS[key];
+  const opt = document.createElement('label');
+  opt.className='mopt'+(key===currentMethod?' sel':'');
+  opt.innerHTML = `<input type="radio" name="method" value="${key}" ${key===currentMethod?'checked':''}>
+    <span class="lab">${m.label}</span><span class="tag">${m.tag}</span>`;
+  opt.addEventListener('click',()=>{
+    document.querySelectorAll('.mopt').forEach(o=>o.classList.remove('sel'));
+    opt.classList.add('sel');
+    currentMethod = key;
+    updateNField();
+  });
+  methodSelectEl.appendChild(opt);
+}
+
+METHOD_ORDER.forEach(buildMethodOption);
+
+const methodDivider = document.createElement('div');
+methodDivider.className = 'method-divider';
+methodDivider.textContent = 'Gauss–Legendre (no es Newton–Cotes)';
+methodSelectEl.appendChild(methodDivider);
+buildMethodOption(GAUSS_KEY);
+
+function updateNField(){
+  const m = METHODS[currentMethod];
+  const nLabel = document.getElementById('n-label');
+  if(currentMethod===GAUSS_KEY){
+    nLabel.textContent = 'Puntos de Gauss (n)';
+    nInput.disabled = false;
+    nInput.min = 1; nInput.max = 5;
+    let n = parseInt(nInput.value)||3;
+    if(n<1) n=1; if(n>5) n=5;
+    nInput.value = n;
+    nHint.textContent = 'Entre 1 y 5 puntos. Exacta hasta grado 2n−1 (el doble que Newton-Cotes con la misma cantidad de nodos).';
+    nHint.classList.remove('warn');
+    return;
+  }
+  nLabel.textContent = 'Subintervalos (n)';
+  nInput.removeAttribute('min'); nInput.removeAttribute('max');
+  if(m.fixedN){
+    nInput.value = m.fixedN;
+    nInput.disabled = true;
+    nHint.textContent = `Fórmula simple: n fijo en ${m.fixedN} (${m.fixedN+1} nodos).`;
+    nHint.classList.remove('warn');
+  } else {
+    nInput.disabled = false;
+    let n = parseInt(nInput.value)||m.minN;
+    if(!m.validN(n)){
+      // snap to nearest valid
+      while(!m.validN(n)) n++;
+      nInput.value = n;
+    }
+    nHint.textContent = currentMethod==='simpson13_comp' ? 'Debe ser un entero par ≥ 2.' :
+                         currentMethod==='simpson38_comp' ? 'Debe ser múltiplo de 3 (≥ 3).' :
+                         'Cualquier entero ≥ 1.';
+    nHint.classList.remove('warn');
+  }
+}
+updateNField();
+
+/* ============================================================
+   GRAPH RENDERING
+   ============================================================ */
+const canvas = document.getElementById('graph');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio||1;
+  canvas.width = rect.width*dpr;
+  canvas.height = 420*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+function lagrange(xsPanel,fsPanel){
+  return function(x){
+    let total=0;
+    for(let i=0;i<xsPanel.length;i++){
+      let term=fsPanel[i];
+      for(let j=0;j<xsPanel.length;j++){
+        if(j!==i) term *= (x-xsPanel[j])/(xsPanel[i]-xsPanel[j]);
+      }
+      total+=term;
+    }
+    return total;
+  };
+}
+
+/* ---------- mini quadrature illustration (theory cards) ---------- */
+const DEMO_N = { trap_comp:6, simpson13_comp:6, simpson38_comp:6, gauss_legendre:4 };
+function demoF(x){ return 3 + 1.8*Math.sin(1.15*x) - 0.15*x; }
+
+function drawMiniQuadrature(canvas, key){
+  if(!canvas) return;
+  const m = METHODS[key];
+  const n = m.fixedN || DEMO_N[key] || 6;
+  const a = 0, b = (key===GAUSS_KEY) ? 6 : n;
+  const result = m.run(demoF, a, b, n);
+
+  const ctx2 = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio||1;
+  const rect = canvas.getBoundingClientRect();
+  const W = rect.width || 300, H = 150;
+  canvas.width = W*dpr; canvas.height = H*dpr;
+  ctx2.setTransform(dpr,0,0,dpr,0,0);
+  ctx2.clearRect(0,0,W,H);
+
+  const padL=8,padR=8,padT=14,padB=12;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+
+  let ys=[]; for(let i=0;i<=60;i++) ys.push(demoF(a+(b-a)*i/60));
+  let yMin=Math.min(...ys,0), yMax=Math.max(...ys);
+  const pad=(yMax-yMin)*0.18||1; yMin-=pad*0.3; yMax+=pad;
+
+  const X = x => padL + (x-a)/(b-a)*plotW;
+  const Y = y => padT + plotH - (y-yMin)/(yMax-yMin)*plotH;
+
+  const colors=['rgba(242,166,90,0.34)','rgba(127,224,180,0.34)'];
+  const strokes=['rgba(242,166,90,0.95)','rgba(127,224,180,0.95)'];
+
+  result.panels.forEach((panel,pi)=>{
+    const xsPanel = panel.map(i=>result.xs[i]);
+    const fsPanel = panel.map(i=>result.fs[i]);
+    const poly = lagrange(xsPanel,fsPanel);
+    const steps=26;
+    ctx2.beginPath();
+    ctx2.moveTo(X(xsPanel[0]), Y(0));
+    for(let s=0;s<=steps;s++){
+      const x = xsPanel[0] + (xsPanel[xsPanel.length-1]-xsPanel[0])*s/steps;
+      ctx2.lineTo(X(x), Y(poly(x)));
+    }
+    ctx2.lineTo(X(xsPanel[xsPanel.length-1]), Y(0));
+    ctx2.closePath();
+    ctx2.fillStyle = colors[pi%2];
+    ctx2.fill();
+    ctx2.strokeStyle = strokes[pi%2];
+    ctx2.lineWidth = 1.3;
+    ctx2.stroke();
+  });
+
+  // guide lines to nodes
+  result.xs.forEach((x,i)=>{
+    ctx2.strokeStyle='rgba(232,238,245,0.2)';
+    ctx2.setLineDash([2,3]);
+    ctx2.beginPath();ctx2.moveTo(X(x),Y(0));ctx2.lineTo(X(x),Y(result.fs[i]));ctx2.stroke();
+    ctx2.setLineDash([]);
+  });
+
+  // true function on top
+  ctx2.strokeStyle='#4fd1c5';
+  ctx2.lineWidth=1.8;
+  ctx2.beginPath();
+  for(let i=0;i<=80;i++){
+    const x=a+(b-a)*i/80, y=demoF(x);
+    const px=X(x), py=Y(y);
+    if(i===0) ctx2.moveTo(px,py); else ctx2.lineTo(px,py);
+  }
+  ctx2.stroke();
+
+  // node dots
+  result.xs.forEach((x,i)=>{
+    ctx2.beginPath();
+    ctx2.arc(X(x),Y(result.fs[i]),2.6,0,Math.PI*2);
+    ctx2.fillStyle='#e8eef5';
+    ctx2.fill();
+    ctx2.strokeStyle='#4fd1c5';
+    ctx2.lineWidth=1;
+    ctx2.stroke();
+  });
+}
+
+function drawGraph(f,a,b,result,opts){
+  opts = opts||{};
+  const revealCount = opts.revealCount===undefined ? result.panels.length : opts.revealCount;
+  resizeCanvas();
+  const W = canvas.getBoundingClientRect().width, H=420;
+  const padL=54,padR=20,padT=20,padB=36;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+
+  ctx.clearRect(0,0,W,H);
+
+  // sample f widely for y-range
+  const margin=(b-a)*0.06 || 1;
+  const xa=a-margin, xb=b+margin;
+  let ys=[];
+  const N=200;
+  for(let i=0;i<=N;i++){
+    const x=xa+(xb-xa)*i/N;
+    try{ const y=f(x); if(isFinite(y)) ys.push(y); }catch(e){}
+  }
+  if(ys.length===0){ ys=[0,1]; }
+  let yMin=Math.min(...ys,0), yMax=Math.max(...ys,0);
+  const yPad=(yMax-yMin)*0.12 || 1;
+  yMin-=yPad; yMax+=yPad;
+
+  const X = x => padL + (x-xa)/(xb-xa)*plotW;
+  const Y = y => padT + plotH - (y-yMin)/(yMax-yMin)*plotH;
+
+  // grid
+  ctx.strokeStyle='rgba(79,209,197,0.08)';
+  ctx.lineWidth=1;
+  const gridStepsX=10, gridStepsY=8;
+  for(let i=0;i<=gridStepsX;i++){
+    const gx=padL+plotW*i/gridStepsX;
+    ctx.beginPath();ctx.moveTo(gx,padT);ctx.lineTo(gx,padT+plotH);ctx.stroke();
+  }
+  for(let i=0;i<=gridStepsY;i++){
+    const gy=padT+plotH*i/gridStepsY;
+    ctx.beginPath();ctx.moveTo(padL,gy);ctx.lineTo(padL+plotW,gy);ctx.stroke();
+  }
+
+  // axes
+  ctx.strokeStyle='#3a5c82';
+  ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(padL,Y(0));ctx.lineTo(padL+plotW,Y(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(X(0>=xa&&0<=xb?0:xa),padT);ctx.lineTo(X(0>=xa&&0<=xb?0:xa),padT+plotH);ctx.stroke();
+
+  ctx.fillStyle='#93a8c2';
+  ctx.font='11px JetBrains Mono, monospace';
+  ctx.textAlign='center';
+  for(let i=0;i<=gridStepsX;i++){
+    const xv = xa+(xb-xa)*i/gridStepsX;
+    ctx.fillText(xv.toFixed(1), padL+plotW*i/gridStepsX, padT+plotH+16);
+  }
+  ctx.textAlign='right';
+  for(let i=0;i<=gridStepsY;i++){
+    const yv = yMax-(yMax-yMin)*i/gridStepsY;
+    ctx.fillText(yv.toFixed(1), padL-8, padT+plotH*i/gridStepsY+4);
+  }
+
+  // panels (fills) — draw first, under the curve
+  const colA='rgba(242,166,90,0.32)';
+  const colB='rgba(127,224,180,0.32)';
+  const strokeA='rgba(242,166,90,0.9)';
+  const strokeB='rgba(127,224,180,0.9)';
+
+  result.panels.forEach((panel,pi)=>{
+    if(pi>=revealCount) return;
+    const xsPanel = panel.map(i=>result.xs[i]);
+    const fsPanel = panel.map(i=>result.fs[i]);
+    const poly = lagrange(xsPanel,fsPanel);
+    const steps=30;
+    ctx.beginPath();
+    ctx.moveTo(X(xsPanel[0]), Y(0));
+    for(let s=0;s<=steps;s++){
+      const x = xsPanel[0] + (xsPanel[xsPanel.length-1]-xsPanel[0])*s/steps;
+      const y = poly(x);
+      ctx.lineTo(X(x), Y(y));
+    }
+    ctx.lineTo(X(xsPanel[xsPanel.length-1]), Y(0));
+    ctx.closePath();
+    ctx.fillStyle = pi%2===0 ? colA : colB;
+    ctx.fill();
+    ctx.strokeStyle = pi%2===0 ? strokeA : strokeB;
+    ctx.lineWidth=1.4;
+    ctx.stroke();
+  });
+
+  // node markers + guide lines
+  result.xs.forEach((x,i)=>{
+    ctx.strokeStyle='rgba(232,238,245,0.25)';
+    ctx.setLineDash([2,3]);
+    ctx.beginPath();ctx.moveTo(X(x),Y(0));ctx.lineTo(X(x),Y(result.fs[i]));ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // f(x) curve (true function), on top
+  ctx.strokeStyle='#4fd1c5';
+  ctx.lineWidth=2.2;
+  ctx.beginPath();
+  let started=false;
+  for(let i=0;i<=N;i++){
+    const x=xa+(xb-xa)*i/N;
+    let y;
+    try{ y=f(x); }catch(e){ y=NaN; }
+    if(!isFinite(y)){ started=false; continue; }
+    const py=Y(y);
+    if(!started){ ctx.moveTo(X(x),py); started=true; } else { ctx.lineTo(X(x),py); }
+  }
+  ctx.stroke();
+
+  // node dots
+  result.xs.forEach((x,i)=>{
+    ctx.beginPath();
+    ctx.arc(X(x),Y(result.fs[i]),3.4,0,Math.PI*2);
+    ctx.fillStyle='#e8eef5';
+    ctx.fill();
+    ctx.strokeStyle='#4fd1c5';
+    ctx.lineWidth=1.4;
+    ctx.stroke();
+  });
+
+  // a,b labels
+  ctx.fillStyle='#f2a65a';
+  ctx.font='600 11px JetBrains Mono, monospace';
+  ctx.textAlign='center';
+  ctx.fillText('a',X(a),padT+plotH+30);
+  ctx.fillText('b',X(b),padT+plotH+30);
+}
+
+/* ============================================================
+   COMPUTE + RENDER PIPELINE
+   ============================================================ */
+function compileF(expr){
+  const node = math.parse(expr);
+  const code = node.compile();
+  return function(x){ return code.evaluate({x}); };
+}
+
+function fmt(v,d=6){
+  if(v===undefined||v===null||!isFinite(v)) return '—';
+  return Number(v).toFixed(d);
+}
+
+function runCurrent(){
+  errorBox.style.display='none';
+  let f, a, b, n;
+  try{
+    f = compileF(fxInput.value);
+    a = math.evaluate(aInput.value);
+    b = math.evaluate(bInput.value);
+    if(typeof a!=='number') a=Number(a);
+    if(typeof b!=='number') b=Number(b);
+    if(!isFinite(a)||!isFinite(b)) throw new Error('Los límites a y b deben ser numéricos.');
+    if(a===b) throw new Error('a y b no pueden ser iguales.');
+    // test evaluate f
+    const testVal = f((a+b)/2);
+    if(typeof testVal!=='number' || !isFinite(testVal)) throw new Error('f(x) no evaluó a un número real en el intervalo.');
+  }catch(e){
+    errorBox.textContent = '⚠ '+e.message;
+    errorBox.style.display='block';
+    return null;
+  }
+
+  const m = METHODS[currentMethod];
+  n = m.fixedN || parseInt(nInput.value);
+  if(!m.fixedN && !m.validN(n)){
+    errorBox.textContent = '⚠ El valor de n no es válido para este método. Se ajustó automáticamente.';
+    errorBox.style.display='block';
+    let nn=n, guard=0;
+    while(!m.validN(nn) && guard<1000){
+      nn++; guard++;
+      if(m.maxN && nn>m.maxN) nn=m.minN;
+    }
+    n=nn; nInput.value=n;
+  }
+
+  let result;
+  try{
+    result = m.run(f,a,b,n);
+  }catch(e){
+    errorBox.textContent = '⚠ Error al calcular: '+e.message;
+    errorBox.style.display='block';
+    return null;
+  }
+
+  const ref = referenceIntegral(f,a,b);
+  const err = Math.abs(result.I-ref);
+
+  // readout
+  document.getElementById('out-I').textContent = fmt(result.I);
+  document.getElementById('out-ref').textContent = fmt(ref);
+  document.getElementById('out-err').textContent = fmt(err,8);
+
+  // parameter chips
+  const chips = document.getElementById('param-chips');
+  if(result.isGauss){
+    chips.innerHTML = `
+      <span class="chip">método: <b>${m.label}</b></span>
+      <span class="chip">puntos de Gauss: <b>${n}</b></span>
+      <span class="chip">exacta hasta grado: <b>${2*n-1}</b></span>
+      <span class="chip">nodos: <b>no equiespaciados</b></span>`;
+  } else {
+    const deg = DEGREE[currentMethod];
+    chips.innerHTML = `
+      <span class="chip">método: <b>${m.label}</b></span>
+      <span class="chip">grado del polinomio: <b>${deg}</b></span>
+      <span class="chip">n: <b>${n}</b></span>
+      <span class="chip">h = (b−a)/n: <b>${fmt(result.h,5)}</b></span>
+      <span class="chip">nodos: <b>${result.xs.length}</b></span>`;
+  }
+
+  // formula: general + numeric substitution
+  const fd = document.getElementById('formula-display');
+  fd.innerHTML = `
+    <div class="formula-label">Fórmula general</div>
+    <div class="formula" id="fd-formula"></div>
+    <div class="formula-label num">Sustitución con los valores actuales</div>
+    <div class="formula num-box" id="fd-sub"></div>`;
+  K(document.getElementById('fd-formula'), m.formula, true);
+  K(document.getElementById('fd-sub'), buildSubstitutionTex(result), true);
+
+  // table
+  const tbody = document.querySelector('#iter-table tbody');
+  const tfoot = document.querySelector('#iter-table tfoot');
+  const thead = document.querySelector('#iter-table thead tr');
+  thead.innerHTML = `<th>i</th><th>xᵢ</th><th>f(xᵢ)</th><th>${result.isGauss?'peso wᵢ':'coef. cᵢ'}</th><th>término</th>`;
+  tbody.innerHTML='';
+  result.rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    const coefDisplay = result.isGauss ? fmt(r.coef,5) : r.coef;
+    tr.innerHTML = `<td>${r.i}</td><td>${fmt(r.x,5)}</td><td>${fmt(r.fx,5)}</td><td>${coefDisplay}</td><td>${fmt(r.term,6)}</td>`;
+    tbody.appendChild(tr);
+  });
+  const tfootText = result.isGauss
+    ? `I = Σ wᵢ·f(xᵢ) — ${result.sumLabel}`
+    : `I = Σ términos (${result.factorLabel} · [${result.sumLabel}])`;
+  tfoot.innerHTML = `<tr><td colspan="4">${tfootText}</td><td>${fmt(result.I,6)}</td></tr>`;
+
+  drawGraph(f,a,b,result);
+
+  lastResult = {expr:fxInput.value, a, b, method:m.label, n, I:result.I, ref, err};
+
+  runComparison(f,a,b);
+  return {f,a,b,result};
+}
+
+/* comparison across all methods */
+function runComparison(f,a,b){
+  const ref = referenceIntegral(f,a,b);
+  const tbody = document.querySelector('#compare-table tbody');
+  tbody.innerHTML='';
+  const rows=[];
+  COMPARE_ORDER.forEach(key=>{
+    const m = METHODS[key];
+    let n = m.fixedN;
+    if(!n){
+      if(key===GAUSS_KEY){
+        // representative comparison point: 4-point Gauss vs. equivalent-node Newton-Cotes
+        n = 4;
+      } else {
+        // pick a comparable composite n close to current n-input, respecting validity
+        let base = parseInt(nInput.value)||6, guard=0;
+        n = base;
+        while(!m.validN(n) && guard<1000){ n++; guard++; }
+      }
+    }
+    try{
+      const r = m.run(f,a,b,n);
+      const err = Math.abs(r.I-ref);
+      rows.push({label:m.label,n,I:r.I,err,key});
+    }catch(e){}
+  });
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    const highlight = r.key===currentMethod ? 'style="color:var(--accent);font-weight:600;"' : (r.key===GAUSS_KEY ? 'style="color:var(--mint);"' : '');
+    tr.innerHTML = `<td ${highlight}>${r.label}</td><td>${r.n}</td><td>${fmt(r.I,6)}</td><td>${fmt(r.err,8)}</td>`;
+    tbody.appendChild(tr);
+  });
+  drawBarChart(rows);
+}
+
+function drawBarChart(rows){
+  const c = document.getElementById('bar-chart');
+  const ctx2 = c.getContext('2d');
+  const dpr = window.devicePixelRatio||1;
+  const rect = c.getBoundingClientRect();
+  c.width = rect.width*dpr; c.height=220*dpr;
+  ctx2.setTransform(dpr,0,0,dpr,0,0);
+  const W=rect.width,H=220,padL=10,padR=10,padT=10,padB=70;
+  ctx2.clearRect(0,0,W,H);
+
+  const vals = rows.map(r=> r.err>0 ? Math.log10(r.err) : -12);
+  const minV = Math.min(...vals,-10), maxV = Math.max(...vals,0);
+  const barW = (W-padL-padR)/rows.length;
+
+  rows.forEach((r,i)=>{
+    const v = r.err>0? Math.log10(r.err) : minV;
+    const hgt = (v-minV)/(maxV-minV||1) * (H-padT-padB);
+    const x = padL + i*barW + barW*0.15;
+    const w = barW*0.7;
+    const y = H-padB-hgt;
+    const grad = ctx2.createLinearGradient(0,y,0,H-padB);
+    const barColor = r.key===currentMethod ? '#4fd1c5' : (r.key===GAUSS_KEY ? '#7fe0b4' : '#f2a65a');
+    grad.addColorStop(0, barColor);
+    grad.addColorStop(1, 'rgba(255,255,255,0.05)');
+    ctx2.fillStyle = grad;
+    ctx2.fillRect(x,y,w,hgt);
+    ctx2.strokeStyle='rgba(255,255,255,0.15)';
+    ctx2.strokeRect(x,y,w,hgt);
+
+    ctx2.save();
+    ctx2.translate(x+w/2, H-padB+8);
+    ctx2.rotate(-Math.PI/5);
+    ctx2.fillStyle='#93a8c2';
+    ctx2.font='9.5px JetBrains Mono, monospace';
+    ctx2.textAlign='right';
+    ctx2.fillText(r.label.replace(' compuesto',' comp.').replace(' simple',''), 0, 0);
+    ctx2.restore();
+
+    ctx2.fillStyle='#e8eef5';
+    ctx2.font='9px JetBrains Mono, monospace';
+    ctx2.textAlign='center';
+    ctx2.fillText(r.err.toExponential(1), x+w/2, y-4);
+  });
+}
+
+/* animation of panels drawing in */
+let animTimer=null;
+function playAnimation(){
+  const state = runCurrent();
+  if(!state) return;
+  const {f,a,b,result} = state;
+  let i=0;
+  clearInterval(animTimer);
+  drawGraph(f,a,b,result,{revealCount:0});
+  animTimer = setInterval(()=>{
+    i++;
+    drawGraph(f,a,b,result,{revealCount:i});
+    if(i>=result.panels.length){ clearInterval(animTimer); }
+  }, Math.max(120, 900/result.panels.length));
+}
+
+document.getElementById('calc-btn').addEventListener('click', runCurrent);
+document.getElementById('anim-btn').addEventListener('click', playAnimation);
+nInput.addEventListener('change', updateNField);
+window.addEventListener('resize', ()=>{ if(lastResult) runCurrent(); });
+
+/* ============================================================
+   CLASSIC EXAMPLES
+   ============================================================ */
+const EXAMPLES = [
+  {tag:'Polinómica · Chapra', name:'Polinomio de 5º grado', fx:'0.2 + 25*x - 200*x^2 + 675*x^3 - 900*x^4 + 400*x^5', a:'0', b:'0.8', method:'simpson13_comp', n:4, exact:'1.640533'},
+  {tag:'Trigonométrica', name:'Seno en media onda', fx:'sin(x)', a:'0', b:'pi', method:'simpson13_comp', n:6, exact:'2'},
+  {tag:'Exponencial', name:'Crecimiento exponencial', fx:'exp(x)', a:'0', b:'1', method:'trap_comp', n:6, exact:'e − 1 ≈ 1.718282'},
+  {tag:'Racional', name:'Logaritmo natural', fx:'1/x', a:'1', b:'3', method:'simpson38_comp', n:6, exact:'ln 3 ≈ 1.098612'},
+  {tag:'Cuadrática exacta', name:'Parábola simple', fx:'x^2 - 2*x + 2', a:'0', b:'4', method:'simpson13_simple', n:2, exact:'40/3 ≈ 13.33333'},
+  {tag:'Raíz', name:'Raíz cuadrada', fx:'sqrt(x)', a:'1', b:'4', method:'boole_simple', n:4, exact:'14/3 ≈ 4.66667'},
+  {tag:'Gauss–Legendre', name:'Exponencial, alta precisión con 3 nodos', fx:'exp(x)', a:'0', b:'1', method:'gauss_legendre', n:3, exact:'e − 1 ≈ 1.718282'}
+];
+
+function loadIntoSimulator(ex){
+  fxInput.value = ex.fx;
+  aInput.value = ex.a;
+  bInput.value = ex.b;
+  currentMethod = ex.method;
+  document.querySelectorAll('.mopt').forEach(o=>{
+    const inp=o.querySelector('input');
+    const sel = inp.value===ex.method;
+    o.classList.toggle('sel',sel);
+    inp.checked = sel;
+  });
+  updateNField();
+  if(!METHODS[ex.method].fixedN) nInput.value = ex.n;
+  document.querySelector('.tabbtn[data-tab="simulador"]').click();
+  setTimeout(runCurrent, 60);
+}
+
+const exGrid = document.getElementById('ex-grid');
+EXAMPLES.forEach(ex=>{
+  const card=document.createElement('div');
+  card.className='ex-card';
+  card.innerHTML=`
+    <div class="tagline">${ex.tag}</div>
+    <h4>${ex.name}</h4>
+    <div class="fx">f(x) = ${ex.fx}</div>
+    <div class="fx" style="margin-top:4px;color:var(--text-dim)">[a, b] = [${ex.a}, ${ex.b}] &nbsp;·&nbsp; exacto ≈ ${ex.exact}</div>
+    <div class="go">▸ Cargar en el simulador</div>
+  `;
+  card.addEventListener('click', ()=> loadIntoSimulator(ex));
+  exGrid.appendChild(card);
+});
+
+/* ---------- APLICACIONES REALES: robótica, informática, IA ---------- */
+const APPLICATIONS = [
+  { cat:'robotica', catLabel:'Robótica', tag:'Odometría / navegación',
+    name:'Distancia recorrida a partir de la velocidad',
+    desc:'Un robot móvil mide su velocidad lineal con encoders de rueda a intervalos discretos. Para estimar cuánto avanzó hay que integrar v(t) en el tiempo — pero el perfil real de velocidad (aceleración + vibración del motor) no tiene primitiva elemental.',
+    fx:'0.8 + 0.5*sin(2*x)*exp(-0.1*x)', a:'0', b:'10', method:'simpson13_comp', n:10, ref:'d ≈ 8.2078 m (referencia numérica)'},
+  { cat:'robotica', catLabel:'Robótica', tag:'Dinámica / actuadores',
+    name:'Trabajo mecánico de un actuador angular',
+    desc:'El trabajo que realiza el motor de un eslabón de un brazo robótico al girar un ángulo es W = ∫τ(θ)dθ. El torque τ(θ) combina gravedad, fricción de Coulomb y fricción viscosa — una función no polinomial que exige cuadratura numérica en el firmware de control.',
+    fx:'2.5*cos(x) + 0.3*x + 1.2', a:'0', b:'pi/2', method:'gauss_legendre', n:4, ref:'W ≈ 4.7551 N·m (Gauss, alta precisión con solo 4 nodos — ideal para tiempo real)'},
+  { cat:'robotica', catLabel:'Robótica', tag:'Energía / autonomía',
+    name:'Consumo energético de una misión de un dron',
+    desc:'La energía consumida por una batería es E = ∫P(t)dt. Estimar la autonomía restante en vuelo requiere integrar la curva de potencia medida, que fluctúa con las maniobras — se calcula en el propio microcontrolador con trapecio compuesto por su bajo costo computacional.',
+    fx:'15 + 3*sin(0.5*x)*exp(-0.05*x)', a:'0', b:'20', method:'trap_comp', n:10, ref:'E ≈ 307.89 W·s (referencia numérica)'},
+
+  { cat:'informatica', catLabel:'Informática y datos', tag:'Machine Learning — métricas',
+    name:'Área bajo la curva ROC (AUC)',
+    desc:'El AUC-ROC, la métrica estándar para evaluar clasificadores binarios, es literalmente el área bajo una curva TPR vs. FPR. Librerías como scikit-learn la calculan con la regla del trapecio compuesta, aplicada sobre los puntos discretos de la curva ROC.',
+    fx:'1-(1-x)^2', a:'0', b:'1', method:'trap_comp', n:10, ref:'AUC = 2/3 ≈ 0.66667 (exacto para esta curva)'},
+  { cat:'informatica', catLabel:'Informática y datos', tag:'Estadística / probabilidad',
+    name:'Probabilidad acumulada de una distribución normal',
+    desc:'Calcular P(−2 < Z < 2) requiere integrar la densidad gaussiana, cuya primitiva (la función error) no es elemental. Motores estadísticos y bibliotecas de ML la evalúan mediante cuadratura numérica en vez de fórmulas cerradas.',
+    fx:'exp(-x^2/2)/sqrt(2*pi)', a:'-2', b:'2', method:'simpson13_comp', n:8, ref:'P ≈ 0.95450 (valor estadístico conocido)'},
+  { cat:'informatica', catLabel:'Informática y datos', tag:'Sistemas / rendimiento',
+    name:'Consumo acumulado de CPU durante una ejecución',
+    desc:'Perfilar el costo energético real de un algoritmo implica integrar la curva de uso de CPU muestreada durante su ejecución, no solo promediarla. Es la base de herramientas de profiling energético en sistemas embebidos y data centers.',
+    fx:'40 + 25*sin(x)^2', a:'0', b:'2*pi', method:'simpson38_comp', n:9, ref:'≈ 329.87 %·s (referencia numérica)'},
+
+  { cat:'ia', catLabel:'Inteligencia Artificial', tag:'Inferencia bayesiana',
+    name:'Evidencia (normalización) en un modelo bayesiano',
+    desc:'En inferencia bayesiana, la evidencia P(D) = ∫P(D|θ)P(θ)dθ normaliza la distribución posterior. Para la mayoría de los modelos esta integral es intratable analíticamente; se aproxima con cuadratura (en espacios de baja dimensión) o métodos de Monte Carlo (en alta dimensión).',
+    fx:'exp(-x^2)*cos(3*x)', a:'-3', b:'3', method:'gauss_legendre', n:5, ref:'≈ 0.18685 (referencia numérica)'},
+  { cat:'ia', catLabel:'Inteligencia Artificial', tag:'Aprendizaje por refuerzo',
+    name:'Retorno esperado en un espacio de estados continuo',
+    desc:'En RL con estados continuos, el valor esperado de una política es V = ∫V(s)·p(s)ds sobre la distribución de estados. Al no poder enumerar todos los estados, los algoritmos aproximan esta integral con cuadratura o muestreo — clave en robótica autónoma y control óptimo.',
+    fx:'(3-x)*exp(-0.3*x)*sin(x)+2', a:'0', b:'6', method:'simpson13_comp', n:6, ref:'≈ 14.762 (referencia numérica)'}
+];
+
+const CAT_META = {
+  robotica:{ label:'Robótica', color:'var(--accent)', desc:'Odometría, dinámica de actuadores y gestión de energía: la mayoría de las señales que mide un robot en tiempo real (velocidad, torque, potencia) se integran numéricamente porque llegan como muestras discretas, no como funciones cerradas.' },
+  informatica:{ label:'Informática y ciencia de datos', color:'var(--amber)', desc:'De las métricas de evaluación de modelos a la estadística aplicada y el perfilado de sistemas: la cuadratura numérica es una herramienta cotidiana, aunque suele estar escondida detrás de una función de librería.' },
+  ia:{ label:'Inteligencia Artificial', color:'var(--mint)', desc:'Inferencia bayesiana, aprendizaje por refuerzo y evaluación de modelos probabilísticos dependen de integrales que casi nunca tienen solución cerrada — la cuadratura numérica (o sus primos estadísticos, los métodos de Monte Carlo) es la única salida práctica.' }
+};
+
+['robotica','informatica','ia'].forEach(cat=>{
+  const meta = CAT_META[cat];
+  const container = document.getElementById(`app-${cat}`);
+  container.innerHTML = `
+    <div class="app-cat-header"><span class="cat-dot" style="background:${meta.color}"></span><h3>${meta.label}</h3></div>
+    <p class="app-cat-desc">${meta.desc}</p>
+    <div class="app-grid" id="app-grid-${cat}"></div>
+  `;
+  const grid = document.getElementById(`app-grid-${cat}`);
+  APPLICATIONS.filter(a=>a.cat===cat).forEach(ap=>{
+    const card = document.createElement('div');
+    card.className = `app-card cat-${cat}`;
+    card.innerHTML = `
+      <div class="app-tag">${ap.tag}</div>
+      <h4>${ap.name}</h4>
+      <p class="app-desc">${ap.desc}</p>
+      <div class="app-fx">f(x) = ${ap.fx}</div>
+      <div class="app-ref">[a,b] = [${ap.a}, ${ap.b}] · ${ap.ref}</div>
+      <div class="go">▸ Cargar en el simulador (${METHODS[ap.method].label})</div>
+    `;
+    card.addEventListener('click', ()=> loadIntoSimulator(ap));
+    grid.appendChild(card);
+  });
+});
+
+/* ============================================================
+   AUDIO — Web Speech API
+   ============================================================ */
+const SUMMARY_TEXT = `Las fórmulas de Newton-Cotes son un conjunto de métodos de integración numérica que aproximan una integral definida reemplazando la función original por un polinomio interpolante que pasa por puntos igualmente espaciados. Existen versiones simples, que usan un único polinomio en todo el intervalo, y versiones compuestas, que dividen el intervalo en varios subpaneles para reducir el error. El método del trapecio usa un polinomio de grado uno. Simpson un tercio usa un polinomio de grado dos. Simpson tres octavos usa un polinomio de grado tres. Y la regla de Boole usa un polinomio de grado cuatro. En general, a mayor grado del polinomio interpolante, menor es el error de truncamiento, aunque las versiones compuestas suelen preferirse por su mejor estabilidad numérica. Este simulador permite calcular, visualizar y comparar todos estos métodos de forma interactiva.`;
+
+document.getElementById('transcript').innerHTML = '<b>Resumen — Métodos de Newton-Cotes</b><br><br>' + SUMMARY_TEXT;
+
+let voices=[];
+function loadVoices(){
+  voices = speechSynthesis.getVoices();
+  const sel = document.getElementById('voice-select');
+  sel.innerHTML='';
+  const esVoices = voices.filter(v=>v.lang.startsWith('es'));
+  const list = esVoices.length? esVoices : voices;
+  list.forEach((v,i)=>{
+    const opt=document.createElement('option');
+    opt.value=v.name; opt.textContent = `${v.name} (${v.lang})`;
+    sel.appendChild(opt);
+  });
+}
+loadVoices();
+if(speechSynthesis.onvoiceschanged!==undefined){ speechSynthesis.onvoiceschanged = loadVoices; }
+
+const waveform = document.getElementById('waveform');
+const dialIcon = document.getElementById('dial-icon');
+const playBtn = document.getElementById('play-btn');
+
+function setPlayingUI(playing){
+  waveform.classList.toggle('playing',playing);
+  dialIcon.innerHTML = playing
+    ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>'
+    : '<path d="M8 5v14l11-7z"/>';
+}
+
+function speak(text){
+  if(!('speechSynthesis' in window)){
+    alert('Este navegador no soporta síntesis de voz.');
+    return;
+  }
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  const sel = document.getElementById('voice-select');
+  const chosen = voices.find(v=>v.name===sel.value);
+  if(chosen) utter.voice = chosen;
+  utter.lang = chosen ? chosen.lang : 'es-ES';
+  utter.rate = 0.98;
+  utter.pitch = 1.0;
+  utter.onstart = ()=> setPlayingUI(true);
+  utter.onend = ()=> setPlayingUI(false);
+  utter.onerror = ()=> setPlayingUI(false);
+  speechSynthesis.speak(utter);
+}
+
+document.getElementById('play-btn').addEventListener('click', ()=> speak(SUMMARY_TEXT));
+document.getElementById('stop-btn').addEventListener('click', ()=>{ speechSynthesis.cancel(); setPlayingUI(false); });
+document.getElementById('play-result-btn').addEventListener('click', ()=>{
+  if(!lastResult){
+    speak('Todavía no calculaste ningún resultado en el simulador. Andá a la pestaña simulador, elegí una función y presioná calcular.');
+    return;
+  }
+  const t = `Resultado del último cálculo. Función: ${lastResult.expr}. Intervalo de ${lastResult.a} a ${lastResult.b}. Método: ${lastResult.method}, con ${lastResult.n} subintervalos. La integral aproximada dio ${lastResult.I.toFixed(5)}, frente a un valor de referencia de ${lastResult.ref.toFixed(5)}, con un error absoluto de ${lastResult.err.toExponential(2)}.`;
+  speak(t);
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+setTimeout(()=>{ runCurrent(); }, 80);
+</script>
+</body>
+</html>
