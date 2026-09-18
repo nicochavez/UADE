@@ -7,7 +7,10 @@ sources:
   - 04A Newton Cotes.pdf
   - newton-cotes-simulador.html
   - Viernes TN 2026-II.pdf
-updated: 2026-08-28
+  - 05A Introducción al metodo de Monte Carlo.pdf
+  - 05B Repaso Monte_Carlo.pdf
+  - 05C Lectura 1 Erraor_acotado_vs_confianza_probabilística.pdf
+updated: 2026-09-18
 ---
 
 # Integración numérica
@@ -34,18 +37,28 @@ Una familia distinta, que además optimiza la **posición** de los nodos, es la
 [[cuadratura-de-gauss-legendre]].
 
 Temas asociados: estimación de las incertidumbres, orden de aproximación y
-discretizaciones óptimas (ver [[analisis-de-error]] y [[notacion-big-o]]).
+discretizaciones óptimas (ver [[analisis-de-error]], [[notacion-big-o]] y
+[[error-de-truncamiento-y-redondeo]]).
 
-## Enfoque probabilístico: Monte Carlo
+## Enfoque probabilístico: Monte Carlo (Clase 5)
 
-Estima el área mediante **muestreo aleatorio**: se generan miles de puntos
-aleatorios en una región conocida y se cuenta la proporción que cae bajo la
-curva. Su poder reside en problemas complejos y de **alta dimensión**.
+Estima el área mediante **muestreo aleatorio** en lugar de una malla. Su
+fortaleza está en los problemas complejos y de **alta dimensión**, donde el
+error escala como $1/\sqrt{n}$ sin importar la dimensión. Desarrollado en:
 
-Ejemplo clásico: estimar $\pi$ lanzando puntos aleatorios en un cuadrado que
-circunscribe un cuarto de círculo ($\pi \approx 4 \cdot \text{puntos\_dentro} / \text{total}$). Temas
-asociados (Clase 5): estimadores puntuales, intervalos de confianza, estimación
-de varianza y tamaño de la generación pseudoaleatoria.
+- [[metodo-de-monte-carlo]] — qué es y la receta de 4 pasos.
+- [[estimacion-de-pi-por-monte-carlo]] — el ejemplo clásico,
+  $\pi \approx 4 \cdot \text{dentro}/\text{total}$.
+- [[integracion-por-monte-carlo]] — estimador de valor medio
+  $\hat{I} = (b-a)\frac{1}{n}\sum f(x_i)$ y método de aciertos.
+- [[ley-de-los-grandes-numeros]] y [[teorema-central-del-limite]] — por qué
+  converge y a qué ritmo.
+- [[intervalo-de-confianza]] — $\hat{I} \pm z_{\alpha/2}\,\sigma/\sqrt{n}$.
+- [[generacion-de-numeros-aleatorios]] — `random.uniform` y semilla.
+
+Comparación entre ambos enfoques: [[error-acotado-vs-confianza-probabilistica]]
+(y el límite práctico de los deterministas en
+[[error-de-truncamiento-y-redondeo]]).
 
 ## Herramienta
 

@@ -43,7 +43,8 @@ Reconstruir un modelo continuo a partir de datos discretos, y estimar su tasa de
 
 ## 04 · Integración y ecuaciones diferenciales
 
-Calcular $\int_a^b f(x)\,dx$ cuando no hay primitiva, y resolver EDOs.
+Calcular $\int_a^b f(x)\,dx$ cuando no hay primitiva (de forma determinista o por
+Monte Carlo) y resolver EDOs.
 
 - [[integracion-numerica]] — panorama: enfoques deterministas vs. Monte Carlo.
 - [[formulas-de-newton-cotes]] — la familia completa: estrategia, simple vs. compuesta, error y tabla comparativa.
@@ -53,7 +54,25 @@ Calcular $\int_a^b f(x)\,dx$ cuando no hay primitiva, y resolver EDOs.
 - [[regla-de-simpson-3-8]] — cúbicas, requiere $n$ múltiplo de 3.
 - [[cuadratura-de-gauss-legendre]] — nodos y pesos optimizados; exacta hasta grado $2n-1$.
 - [[simulador-de-newton-cotes]] — herramienta de la cátedra con los ocho métodos y sus aplicaciones reales.
-- [[ecuaciones-diferenciales-ordinarias]] — Euler y Runge-Kutta 4.
+
+**Monte Carlo (Clase 5)**
+
+- [[metodo-de-monte-carlo]] — muestreo aleatorio; la receta de 4 pasos.
+- [[estimacion-de-pi-por-monte-carlo]] — el ejemplo de los dardos, $\pi \approx 4k/n$, código.
+- [[integracion-por-monte-carlo]] — estimador de valor medio (1D/2D) y método de aciertos.
+- [[ley-de-los-grandes-numeros]] — por qué el promedio muestral converge.
+- [[teorema-central-del-limite]] — distribución normal; $\bar{x} \sim N(\mu, \sigma/\sqrt{n})$.
+- [[intervalo-de-confianza]] — $\hat{I} \pm z\,\sigma/\sqrt{n}$, error estándar, valores $z$.
+- [[generacion-de-numeros-aleatorios]] — `random.uniform`, semilla y reproducibilidad.
+- [[error-de-truncamiento-y-redondeo]] — errores opuestos y paso $h$ óptimo.
+- [[error-acotado-vs-confianza-probabilistica]] — lectura: determinista vs. probabilístico.
+
+**Ecuaciones diferenciales (Clase 6)**
+
+- [[ecuaciones-diferenciales-ordinarias]] — problema de Cauchy, $y_{i+1} = y_i + \phi h$, tabla comparativa.
+- [[metodo-de-euler]] — una pendiente; error que se acumula.
+- [[metodo-de-heun]] — Euler mejorado: predictor-corrector, promedio de dos pendientes.
+- [[metodo-de-runge-kutta-4]] — cuatro pendientes ponderadas; el estándar de la industria.
 
 ## 05 · Sistemas dinámicos
 

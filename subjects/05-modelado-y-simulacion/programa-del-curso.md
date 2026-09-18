@@ -4,7 +4,7 @@ topic: Programa y cronograma del curso
 sources:
   - Viernes TN 2026-II.pdf
   - 01D Lectura 1.pdf
-updated: 2026-08-07
+updated: 2026-09-18
 ---
 
 # Programa del curso
@@ -33,8 +33,8 @@ Datos administrativos de la materia (según `Viernes TN 2026-II.pdf`):
 | 2 | 14/8 | [[metodo-de-newton-raphson]], convergencia cuadrática, aceleración de Aitken |
 | 3 | 21/8 | [[polinomio-de-lagrange]], [[diferencias-finitas]], pasos óptimos |
 | 4 | 28/8 | [[integracion-numerica]]: rectángulos, trapecios, Simpson |
-| 5 | 4/9 | Métodos Montecarlo para integración; intervalos de confianza |
-| 6 | 11/9 | [[ecuaciones-diferenciales-ordinarias]]: Cauchy, Euler, Taylor, Runge-Kutta |
+| 5 | 4/9 | [[metodo-de-monte-carlo]] para [[integracion-por-monte-carlo|integración]]; [[intervalo-de-confianza|intervalos de confianza]] |
+| 6 | 11/9 | [[ecuaciones-diferenciales-ordinarias]]: Cauchy, [[metodo-de-euler]], [[metodo-de-heun]], Taylor, [[metodo-de-runge-kutta-4]] |
 | 7 | 18/9 | **1° PARCIAL** |
 | 8 | 25/9 | [[sistemas-dinamicos]]: equilibrios, espacio de estados, diagramas de fase |
 | 9 | 2/10 | Escenarios y [[bifurcaciones]] |

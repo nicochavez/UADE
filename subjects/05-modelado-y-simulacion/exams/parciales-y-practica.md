@@ -6,7 +6,9 @@ sources:
   - 01C Búsqueda_Binaria_de_Raíces.pdf
   - 01D Lectura 2.pdf
   - simulador_metodos_numericos-6.html
-updated: 2026-08-21
+  - 05C Lectura 1 Erraor_acotado_vs_confianza_probabilística.pdf
+  - 06A Metodos_de_Runge_Kutta.pdf
+updated: 2026-09-18
 ---
 
 # Parciales y práctica
@@ -28,8 +30,10 @@ Detalle completo del cronograma en [[programa-del-curso]].
   [[analisis-de-error]], [[conjuntos-compactos]], [[condicion-de-lipschitz]]),
   [[busqueda-de-raices]] ([[metodo-de-biseccion]], [[metodo-de-newton-raphson]],
   [[metodo-del-punto-fijo]], [[metodo-de-aitken]]),
-  interpolación/derivación, [[integracion-numerica]] y
-  [[ecuaciones-diferenciales-ordinarias]].
+  interpolación/derivación, [[integracion-numerica]] (incluido
+  [[metodo-de-monte-carlo|Monte Carlo]] e [[intervalo-de-confianza|intervalos de confianza]]) y
+  [[ecuaciones-diferenciales-ordinarias]] ([[metodo-de-euler]], [[metodo-de-heun]],
+  [[metodo-de-runge-kutta-4]]).
 - **2° Parcial (clases 8-13):** [[sistemas-dinamicos]], [[bifurcaciones]],
   sistemas lineales 2D, sistemas no lineales y [[modelos-aplicados]].
 
@@ -104,6 +108,27 @@ como $x = g(x)$:
 | 6 | — | $\ln(x + 1)$ | $0.5$ |
 | 7 | — | $1 - x^3$ | $0.5$ |
 | 9 | — | $(\sin(x) + 5)/x^2$ | $2$ |
+
+### Integral con tolerancia: determinista vs. Monte Carlo (`05C`)
+
+Calcular $\int_0^4 x e^{-x}\,dx$ (exacto: $1 - 5e^{-4} \approx 0.908422$):
+
+1. Con rectángulos, trapecios y Simpson: usar la cota de error de cada método
+   para despejar el $h$ máximo que garantiza $|\text{Error}| \le \tau$ (ver
+   [[error-de-truncamiento-y-redondeo]]).
+2. Repetir reteniendo solo **3 cifras decimales** en los valores de $f$. ¿Se
+   sigue pudiendo alcanzar la tolerancia? ¿Por qué existe un $h$ óptimo?
+3. Estimarla por [[integracion-por-monte-carlo|Monte Carlo]] (aciertos en la caja
+   $[0,4]\times[0,0.6]$ o valor medio) y construir un
+   [[intervalo-de-confianza]] al 95%. ¿Cuántos puntos hacen falta para que el
+   semiancho sea menor que $\tau$?
+
+### EDO: Euler vs. Heun vs. RK4 (`06A`)
+
+Resolver $y' = x + y$, $y(0) = 1$ en $[0, 1]$ con $h = 0.1$ usando
+[[metodo-de-euler]], [[metodo-de-heun]] y [[metodo-de-runge-kutta-4]], y
+comparar con la solución exacta $y = 2e^x - x - 1$. Los valores de referencia
+están en [[ecuaciones-diferenciales-ordinarias]].
 
 ### Exploración con IA sugerida (`01D Lectura 2`)
 

@@ -4,7 +4,8 @@ topic: Error absoluto/relativo y criterios de detención
 sources:
   - 01A Metodos de aproximación Introducción.pdf
   - 01D Lectura 2.pdf
-updated: 2026-08-07
+  - 05C Lectura 1 Erraor_acotado_vs_confianza_probabilística.pdf
+updated: 2026-09-18
 ---
 
 # Análisis de error
@@ -52,5 +53,18 @@ calcular *a priori* cuántas iteraciones hacen falta:
 $$
 |p_n - p| \le \frac{b - a}{2^n}
 $$
+
+## Truncamiento vs. redondeo
+
+En las aproximaciones con paso $h$ conviven dos errores con tendencias
+opuestas: el de **truncamiento** (del método) baja al achicar $h$, y el de
+**redondeo** (precisión finita) sube. Por eso existe un $h$ óptimo; ver
+[[error-de-truncamiento-y-redondeo]].
+
+## Error acotado vs. confianza
+
+Los métodos deterministas dan una **cota** ($|\text{Error}| \le \text{Cota}$);
+Monte Carlo da en cambio un [[intervalo-de-confianza]] con probabilidad
+$1-\alpha$. Ver [[error-acotado-vs-confianza-probabilistica]].
 
 Relacionado: [[iteracion-y-convergencia]], [[metodos-numericos]].
